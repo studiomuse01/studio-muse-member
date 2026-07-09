@@ -840,7 +840,7 @@ function vNotify(){
   const sent=db.sentLogs.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,15);
   return `<div class="pagehead"><div><h1>알림·공지</h1><div class="sub">카카오톡에 붙여넣을 문구를 자동 생성합니다 (직접 발송)</div></div></div>
   <div class="card"><h2>발송 문구 템플릿</h2>
-    <div class="row"><select style="flex:1;min-width:150px" onchange="notifyTplId=this.value;tplEdit=null;render()">
+    <div class="row"><select style="flex:1;min-width:150px" onchange="notifyTplId=this.value;render()">
       ${db.templates.map(t=>`<option value="${t.id}" ${tpl&&tpl.id===t.id?'selected':''}>${esc(t.name)}</option>`).join('')}</select>
       <button class="btn sm" onclick="editTemplate()">문구 수정</button>
       <button class="btn sm" onclick="addTemplate()">새 템플릿</button>
@@ -857,18 +857,7 @@ function vNotify(){
       ${notifyTarget.mode==='member'?`<select style="width:auto" onchange="notifyTarget.memberId=this.value;render()">
         ${db.members.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(m=>`<option value="${m.id}" ${notifyTarget.memberId===m.id?'selected':''}>${esc(m.name)} (${esc(groupName(m.groupId))})</option>`).join('')}</select>`:''}
     </div>
-    ${tplEdit?`
-    <div class="mt" style="background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:14px">
-      <div class="field" style="margin-bottom:10px"><label>템플릿 이름</label>
-        <input id="tplName" value="${tplEdit.mode==='edit'?esc(tpl.name):''}" placeholder="예: 여름 특강 안내"></div>
-      <div class="field"><label>문구 내용 (전체를 보면서 자유롭게 수정하세요)</label>
-        <textarea id="tplBody" rows="12" style="min-height:240px;line-height:1.7;resize:vertical">${tplEdit.mode==='edit'?esc(tpl.body):'안녕하세요, {상호}입니다.\n\n'}</textarea></div>
-      <div class="muted mt">사용 가능 변수: {이름} {단체} {상호} {이용기간} {시작일} {만료일} {레슨기간} {레슨시작일} {레슨만료일} {예정일} {레슨예정일} {회비} {레슨비} {총횟수} {전화번호}</div>
-      <div class="row mt">
-        <button class="btn primary" onclick="saveTemplateEdit()">💾 저장</button>
-        <button class="btn" onclick="tplEdit=null;render()">취소</button></div>
-    </div>`
-    :tpl?`<div class="copybox mt">${esc(tpl.body)}</div>
+    ${tpl?`<div class="copybox mt">${esc(tpl.body)}</div>
     <div class="muted mt">사용 가능 변수: {이름} {단체} {상호} {이용기간} {시작일} {만료일} {레슨기간} {레슨시작일} {레슨만료일} {예정일} {레슨예정일} {회비} {레슨비} {총횟수} {전화번호}</div>`:''}
   </div>
   <div class="card"><h2>📋 ${targetLabel} (${targets.length}명)
@@ -901,30 +890,22 @@ function markSent(){
   targets.forEach(m=>db.sentLogs.push({id:uid(),memberId:m.id,name:m.name,date:todayStr(),template:tpl.name,text:fillTemplate(tpl.body,m)}));
   save();render();toast('발송 기록이 저장되었습니다');
 }
-let tplEdit=null; // null | {mode:'edit'|'new'}
 function editTemplate(){
-  if(!db.templates.find(t=>t.id===notifyTplId))return;
-  tplEdit={mode:'edit'};render();
+  const tpl=db.templates.find(t=>t.id===notifyTplId);if(!tpl)return;
+  const nb=prompt('문구 수정 (변수: {이름} {단체} {이용기간} {레슨기간} {시작일} {만료일} {예정일} {회비} {레슨비} {총횟수})',tpl.body);
+  if(nb!=null){tpl.body=nb;save();render();}
 }
-function addTemplate(){tplEdit={mode:'new'};render();}
-function saveTemplateEdit(){
-  const name=document.getElementById('tplName').value.trim();
-  const body=document.getElementById('tplBody').value;
-  if(!name)return toast('템플릿 이름을 입력하세요');
-  if(!body.trim())return toast('문구 내용을 입력하세요');
-  if(tplEdit.mode==='edit'){
-    const tpl=db.templates.find(t=>t.id===notifyTplId);
-    tpl.name=name;tpl.body=body;
-  }else{
-    const t={id:uid(),name,body};db.templates.push(t);notifyTplId=t.id;
-  }
-  tplEdit=null;save();render();toast('템플릿이 저장되었습니다');
+function addTemplate(){
+  const name=prompt('새 템플릿 이름');if(!name)return;
+  const body=prompt('문구 내용 (변수: {이름} {단체} {예정일} {회비} {레슨비})','{단체} {이름}님, 안녕하세요.\n');
+  if(body==null)return;
+  const t={id:uid(),name:name.trim(),body};db.templates.push(t);notifyTplId=t.id;save();render();
 }
 function delTemplate(){
   if(db.templates.length<=1)return toast('최소 1개의 템플릿이 필요합니다');
   const tpl=db.templates.find(t=>t.id===notifyTplId);
   if(!confirm(`'${tpl.name}' 템플릿을 삭제할까요?`))return;
-  db.templates=db.templates.filter(t=>t.id!==notifyTplId);notifyTplId=db.templates[0].id;tplEdit=null;save();render();
+  db.templates=db.templates.filter(t=>t.id!==notifyTplId);notifyTplId=db.templates[0].id;save();render();
 }
 
 /* ================= 설정 ================= */
