@@ -132,21 +132,27 @@ tr.click:hover td{background:#f8fafc}
 </head>
 <body>
 <div id="lockScreen" style="position:fixed;inset:0;background:#0f172a;z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px">
-  <div style="font-size:40px">🎷</div>
-  <div style="color:#fff;font-weight:800;font-size:18px">회원관리 studioMUSE</div>
-  <div style="color:#94a3b8;font-size:13px">접속 비밀번호를 입력하세요</div>
+  <div style="font-size:40px" id="lockIcon">🎷</div>
+  <div style="color:#fff;font-weight:800;font-size:18px" id="lockTitle">회원관리</div>
+  <div style="color:#94a3b8;font-size:13px;text-align:center" id="lockHint">접속 비밀번호를 입력하세요</div>
   <input type="password" inputmode="numeric" id="lockInput" placeholder="비밀번호" autocomplete="off"
     style="max-width:220px;text-align:center;font-size:20px;letter-spacing:6px;padding:12px"
     onkeydown="if(event.key==='Enter')unlock()">
+  <input type="password" inputmode="numeric" id="lockInput2" placeholder="비밀번호 확인" autocomplete="off"
+    style="max-width:220px;text-align:center;font-size:20px;letter-spacing:6px;padding:12px;display:none"
+    onkeydown="if(event.key==='Enter')unlock()">
   <button class="btn primary" style="width:220px;justify-content:center;padding:12px" onclick="unlock()">확인</button>
   <div id="lockMsg" style="color:#f87171;font-size:13px;height:18px"></div>
+  <div style="color:#475569;font-size:11.5px;text-align:center;max-width:280px">🔒 모든 데이터는 이 기기에만 저장되며<br>외부 서버로 전송되지 않습니다</div>
 </div>
-<div class="mobiletop"><div>🎷 회원관리 <small>studioMUSE</small></div><button class="btn sm" onclick="go('notify')" style="background:#1e293b;border-color:#334155;color:#fff">🔔 알림</button></div>
+<div class="mobiletop"><div id="brandMobile">🎷 회원관리</div><div class="row" style="gap:6px">
+  <button class="btn sm" onclick="go('notify')" style="background:#1e293b;border-color:#334155;color:#fff">🔔</button>
+  <button class="btn sm" onclick="go('settings')" style="background:#1e293b;border-color:#334155;color:#fff">⚙️</button></div></div>
 <div class="app">
   <aside class="sidebar">
-    <div class="logo">🎷 회원관리<small>studioMUSE</small></div>
+    <div class="logo" id="brandSide">🎷 회원관리</div>
     <nav class="nav" id="sidenav"></nav>
-    <div class="foot">데이터는 이 브라우저에 저장됩니다.<br>대시보드에서 백업하세요.</div>
+    <div class="foot" id="sideFoot"></div>
   </aside>
   <main class="main" id="main"></main>
 </div>
@@ -155,20 +161,6 @@ tr.click:hover td{background:#f8fafc}
 <input type="file" id="importFile" accept=".json" style="display:none">
 
 <script>
-/* ================= 접속 잠금 ================= */
-const ACCESS_CODE='3431'; // 접속 비밀번호 (여기서 변경)
-function unlock(){
-  if(document.getElementById('lockInput').value===ACCESS_CODE){
-    sessionStorage.setItem('saxauth','1');
-    document.getElementById('lockScreen').style.display='none';
-  }else{
-    document.getElementById('lockMsg').textContent='비밀번호가 올바르지 않습니다';
-    document.getElementById('lockInput').value='';
-  }
-}
-if(sessionStorage.getItem('saxauth')==='1')document.getElementById('lockScreen').style.display='none';
-else setTimeout(()=>document.getElementById('lockInput').focus(),100);
-
 /* ================= 데이터 ================= */
 const DBKEY='saxadmin_v1';
 const DAYS=['월','화','수','목','금','토','일'];
@@ -178,7 +170,9 @@ const DEFAULT_TEMPLATES=[
  {id:'t1',name:'연습실 이용기간 만료 안내',body:'안녕하세요. 항상 "{단체}"을 이용해 주셔서 진심으로 감사드립니다.\n\n회원님께서 등록하신 연습실 이용기간({이용기간})이 만료되었음을 알려 드립니다.\n\n연습하시면서 불편한 점이나 개선이 필요한 부분이 있으시면 언제든 말씀 부탁드립니다.\n더 좋은 환경으로 보답하겠습니다.\n\n감사합니다.'},
  {id:'t2',name:'회비 납부 예정 안내',body:'[{단체}] {이름}님, 안녕하세요. 🎷\n이번 달 회비({회비}원) 납부 예정일은 {예정일}입니다.\n미리 안내드립니다. 감사합니다!'},
  {id:'t3',name:'레슨 재등록 안내',body:'[{단체}] {이름}님, 안녕하세요. 🎷\n등록하신 레슨 {총횟수}회가 모두 진행되었습니다.\n계속 수강을 원하시면 레슨비 {레슨비}원 결제 부탁드립니다.\n감사합니다!'},
- {id:'t4',name:'레슨 등록기간 만료 안내',body:'안녕하세요. 항상 "{단체}"을 이용해 주셔서 진심으로 감사드립니다.\n\n회원님께서 등록하신 레슨 기간({레슨기간})이 만료되었음을 알려 드립니다.\n\n계속 수강을 원하시면 레슨비 납부 부탁드립니다.\n레슨을 받으시면서 불편한 점이나 개선이 필요한 부분이 있으시면 언제든 말씀 부탁드립니다.\n더 좋은 레슨으로 보답하겠습니다.\n\n감사합니다.'}
+ {id:'t4',name:'레슨 등록기간 만료 안내',body:'안녕하세요. 항상 "{단체}"을 이용해 주셔서 진심으로 감사드립니다.\n\n회원님께서 등록하신 레슨 기간({레슨기간})이 만료되었음을 알려 드립니다.\n\n계속 수강을 원하시면 레슨비 납부 부탁드립니다.\n레슨을 받으시면서 불편한 점이나 개선이 필요한 부분이 있으시면 언제든 말씀 부탁드립니다.\n더 좋은 레슨으로 보답하겠습니다.\n\n감사합니다.'},
+ {id:'t5',name:'레슨 일정 변경 공지',body:'{이름}님, 안녕하세요. {상호}입니다.\n\n레슨 일정이 변경되어 안내드립니다.\n\n▶ 변경 내용: (문구 수정 버튼을 눌러 내용을 입력하세요)\n\n확인 부탁드립니다. 감사합니다.'},
+ {id:'t6',name:'행사 공지 (전체)',body:'안녕하세요, {상호}입니다.\n\n▶ 행사 안내: (문구 수정 버튼을 눌러 내용을 입력하세요)\n\n많은 참여 부탁드립니다. 감사합니다.'}
 ];
 
 function load(){
@@ -188,6 +182,39 @@ function load(){
 let db=load();
 // 기본 템플릿 누락분 보충 (업데이트 대응)
 DEFAULT_TEMPLATES.forEach(t=>{if(!db.templates.find(x=>x.id===t.id))db.templates.push(JSON.parse(JSON.stringify(t)));});
+// 설정 기본값
+db.settings=Object.assign({studioName:'studio MUSE',icon:'🎷',feeLabel:'회비',lessonTotal:4,ownerName:'studio MUSE',ownerContact:'',pin:'',lastBackup:''},db.settings||{});
+const S=()=>db.settings, FL=()=>db.settings.feeLabel||'회비';
+
+/* ================= 접속 잠금 ================= */
+function initLock(){
+  const ls=document.getElementById('lockScreen');
+  document.getElementById('lockIcon').textContent=S().icon;
+  if(sessionStorage.getItem('saxauth')==='1'){ls.style.display='none';return;}
+  if(!S().pin){ // 첫 실행: 비밀번호 만들기
+    document.getElementById('lockTitle').textContent='회원관리 · '+S().studioName;
+    document.getElementById('lockHint').innerHTML='처음 사용하시는군요!<br>접속 비밀번호를 만들어 주세요 (숫자 4자리 이상)';
+    document.getElementById('lockInput2').style.display='';
+  }else{
+    document.getElementById('lockTitle').textContent='회원관리 · '+S().studioName;
+  }
+  setTimeout(()=>document.getElementById('lockInput').focus(),100);
+}
+function unlock(){
+  const v=document.getElementById('lockInput').value.trim();
+  const msg=document.getElementById('lockMsg');
+  if(!S().pin){
+    const v2=document.getElementById('lockInput2').value.trim();
+    if(v.length<4)return msg.textContent='숫자 4자리 이상 입력하세요';
+    if(v!==v2)return msg.textContent='두 입력이 서로 다릅니다';
+    S().pin=v;save();toast('비밀번호가 설정되었습니다');
+  }else if(v!==S().pin){
+    msg.textContent='비밀번호가 올바르지 않습니다';
+    document.getElementById('lockInput').value='';return;
+  }
+  sessionStorage.setItem('saxauth','1');
+  document.getElementById('lockScreen').style.display='none';
+}
 // 구버전 기본 문구 → 새 기본 문구로 교체 (직접 수정한 문구는 유지)
 [['t1','회비 미납 안내'],['t4','레슨비 미납 안내']].forEach(([id,oldName])=>{
   const old=db.templates.find(t=>t.id===id&&t.name===oldName);
@@ -218,7 +245,7 @@ const fmtWon=n=>(n||0).toLocaleString('ko-KR');
 function feeStatus(m){
   if(m.manageFee===false)return{code:'nofee',label:'레슨비만',due:null,over:0};
   if(!m.feePayDate)return{code:'none',label:'납부기록 없음',due:null,over:0};
-  const due=addMonths(m.feePayDate,1);
+  const due=addMonths(m.feePayDate,m.feeCycle||1);
   const over=daysBetween(due,todayStr());
   if(over<=0)return{code:'ok',label:'정상',due,over};
   if(over<=3)return{code:'grace',label:'예정일 경과',due,over};
@@ -279,16 +306,24 @@ const MENUS=[
  {id:'register',ico:'➕',label:'회원 등록'},
  {id:'fees',ico:'💰',label:'회비 관리'},
  {id:'lessons',ico:'📅',label:'레슨 일정'},
- {id:'notify',ico:'🔔',label:'알림 문구'},
+ {id:'notify',ico:'🔔',label:'알림·공지'},
+ {id:'settings',ico:'⚙️',label:'설정'},
 ];
 const TABS=['dashboard','members','register','fees','lessons','notify'];
 let view='dashboard', viewParam=null;
 function go(v,p){view=v;viewParam=p??null;render();window.scrollTo(0,0);}
+function menuLabel(m){return m.id==='fees'?FL()+' 관리':m.label;}
 function renderNav(){
+  document.title='회원관리 '+S().studioName;
+  document.getElementById('brandSide').innerHTML=S().icon+' 회원관리<small>'+esc(S().studioName)+'</small>';
+  document.getElementById('brandMobile').innerHTML=S().icon+' 회원관리 <small>'+esc(S().studioName)+'</small>';
+  document.getElementById('sideFoot').innerHTML=
+    '제공: '+esc(S().ownerName)+(S().ownerContact?'<br>'+esc(S().ownerContact):'')+
+    '<br><span style="color:#334155">모든 데이터는 이 기기에만 저장됩니다</span>';
   document.getElementById('sidenav').innerHTML=MENUS.map(m=>
-    `<button class="${view===m.id?'active':''}" onclick="go('${m.id}')"><span class="ico">${m.ico}</span>${m.label}</button>`).join('');
+    `<button class="${view===m.id?'active':''}" onclick="go('${m.id}')"><span class="ico">${m.ico}</span>${menuLabel(m)}</button>`).join('');
   document.getElementById('tabbar').innerHTML=MENUS.filter(m=>TABS.includes(m.id)).map(m=>
-    `<button class="${view===m.id?'active':''}" onclick="go('${m.id}')"><span class="ico">${m.ico}</span>${m.label.replace('회원 ','')}</button>`).join('');
+    `<button class="${view===m.id?'active':''}" onclick="go('${m.id}')"><span class="ico">${m.ico}</span>${menuLabel(m).replace('회원 ','')}</button>`).join('');
 }
 
 /* ================= 토스트 ================= */
@@ -313,9 +348,13 @@ function vDashboard(){
   const todayLessons=lessonMs.filter(m=>(m.lessonDays||[]).includes(todayDay)).sort((a,b)=>(a.lessonTime||'').localeCompare(b.lessonTime||''));
   const thisMonth=todayStr().slice(0,7);
   const monthIncome=db.payLogs.filter(p=>p.date.startsWith(thisMonth)).reduce((s,p)=>s+(p.amount||0),0);
+  const needBackup=ms.length>0&&(!S().lastBackup||daysBetween(S().lastBackup,todayStr())>=7);
   return `
   <div class="pagehead"><div><h1>대시보드</h1><div class="sub">${fmtDate(todayStr())} (${todayDay}) · 오늘의 현황</div></div>
    <div class="row"><button class="btn sm" onclick="exportData()">⬇️ 백업</button><button class="btn sm" onclick="document.getElementById('importFile').click()">⬆️ 복원</button></div></div>
+  ${needBackup?`<div class="card" style="background:var(--warn-soft);border-color:#fcd34d"><div class="row">
+    <div>⚠️ <b>백업을 권장합니다.</b> <span class="muted">${S().lastBackup?'마지막 백업: '+fmtDate(S().lastBackup):'아직 백업 기록이 없습니다'} · 기기 분실이나 브라우저 데이터 삭제에 대비해 주 1회 백업하세요.</span></div>
+    <div class="spacer"></div><button class="btn sm primary" onclick="exportData()">지금 백업</button></div></div>`:''}
   <div class="grid g4">
     <div class="stat brand" onclick="go('members')"><div class="t">전체 회원</div><div class="n">${ms.length}<small style="font-size:13px;color:var(--sub)">명</small></div></div>
     <div class="stat bad" onclick="go('notify')"><div class="t">미납 (알림 대상)</div><div class="n">${overdueTotal}<small style="font-size:13px;color:var(--sub)">명</small></div></div>
@@ -392,7 +431,8 @@ function vMembers(){
     return true;});
   ms.sort((a,b)=>a.name.localeCompare(b.name,'ko'));
   return `<div class="pagehead"><div><h1>회원 목록</h1><div class="sub">총 ${db.members.length}명</div></div>
-    <button class="btn primary" onclick="go('register')">➕ 회원 등록</button></div>
+    <div class="row"><button class="btn" onclick="exportCSV()">📊 엑셀 내보내기</button>
+    <button class="btn primary" onclick="go('register')">➕ 회원 등록</button></div></div>
   <div class="searchbar">
     <input placeholder="이름·전화번호 검색" value="${esc(mFilter.q)}" oninput="mFilter.q=this.value;renderList()">
     <select onchange="mFilter.group=this.value;renderList()"><option value="">전체 단체</option>${db.groups.map(g=>`<option value="${g.id}" ${mFilter.group===g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select>
@@ -448,9 +488,11 @@ function vRegister(editId){
     <h2 class="mt" style="margin-top:22px">회비</h2>
     <label class="switch" style="margin-bottom:12px"><input type="checkbox" name="manageFee" ${m?(m.manageFee!==false?'checked':''):'checked'} onchange="document.getElementById('feeFields').style.display=this.checked?'':'none'"> 회비 관리 대상 <span class="muted" style="font-weight:400">(해제 시 레슨비만 관리하는 회원)</span></label>
     <div class="formgrid g2" id="feeFields" style="display:${m&&m.manageFee===false?'none':''}">
-      <div class="field"><label>월 회비 (원)</label><input type="number" name="fee" value="${m?m.fee||'':''}" placeholder="50000" inputmode="numeric"></div>
-      <div class="field"><label>최근 회비 납부일자</label><input type="date" name="feePayDate" value="${v('feePayDate')}" onchange="previewDue(this)">
-        <div class="muted" id="duePreview" style="margin-top:4px">${m&&m.feePayDate?'다음 납부 예정일: '+fmtDate(addMonths(m.feePayDate,1)):'납부일 입력 시 다음 예정일(+1개월) 자동 계산'}</div></div>
+      <div class="field"><label>${FL()} (원)</label><input type="number" name="fee" value="${m?m.fee||'':''}" placeholder="50000" inputmode="numeric"></div>
+      <div class="field"><label>납부 주기</label><select name="feeCycle" onchange="previewDue(document.querySelector('input[name=feePayDate]'))">
+        ${[1,3,6,12].map(c=>`<option value="${c}" ${(m?m.feeCycle||1:1)===c?'selected':''}>${c}개월</option>`).join('')}</select></div>
+      <div class="field"><label>최근 ${FL()} 납부일자</label><input type="date" name="feePayDate" value="${v('feePayDate')}" onchange="previewDue(this)">
+        <div class="muted" id="duePreview" style="margin-top:4px">${m&&m.feePayDate?'다음 납부 예정일: '+fmtDate(addMonths(m.feePayDate,m.feeCycle||1)):'납부일 입력 시 다음 예정일 자동 계산'}</div></div>
     </div>
     <h2 class="mt" style="margin-top:22px">레슨</h2>
     <label class="switch" style="margin-bottom:12px"><input type="checkbox" name="hasLesson" ${m&&m.hasLesson?'checked':''} onchange="document.getElementById('lessonFields').style.display=this.checked?'':'none'"> 레슨 수강 회원</label>
@@ -462,7 +504,7 @@ function vRegister(editId){
         <div class="field"><label>레슨비 (원)</label><input type="number" name="lessonFee" value="${m?m.lessonFee||'':''}" placeholder="120000" inputmode="numeric"></div>
         <div class="field"><label>레슨비 납부일</label><input type="date" name="lessonPayDate" value="${v('lessonPayDate')}" onchange="previewLessonDue(this)">
           <div class="muted" id="lessonDuePreview" style="margin-top:4px">${m&&m.lessonPayDate?'다음 레슨비 납부 예정일: '+fmtDate(addMonths(m.lessonPayDate,1)):'납부일 입력 시 다음 예정일(+1개월) 자동 계산'}</div></div>
-        <div class="field"><label>총 레슨 횟수 (결제 1회당)</label><input type="number" name="lessonTotal" value="${m?m.lessonTotal||4:4}" min="1"></div>
+        <div class="field"><label>총 레슨 횟수 (결제 1회당)</label><input type="number" name="lessonTotal" value="${m?m.lessonTotal||4:(S().lessonTotal||4)}" min="1"></div>
         <div class="field"><label>현재 진행 회차</label><input type="number" name="lessonDone" value="${m?m.lessonDone||0:0}" min="0"></div>
       </div>
     </div>
@@ -474,7 +516,8 @@ function vRegister(editId){
 }
 function previewDue(inp){
   const el=document.getElementById('duePreview');
-  el.textContent=inp.value?'다음 납부 예정일: '+fmtDate(addMonths(inp.value,1)):'납부일 입력 시 다음 예정일(+1개월) 자동 계산';
+  const cy=Number(document.querySelector('select[name=feeCycle]')?.value)||1;
+  el.textContent=inp.value?'다음 납부 예정일: '+fmtDate(addMonths(inp.value,cy))+' ('+cy+'개월)':'납부일 입력 시 다음 예정일 자동 계산';
 }
 function previewLessonDue(inp){
   const el=document.getElementById('lessonDuePreview');
@@ -488,7 +531,7 @@ function saveMember(e,editId){
     regDate:f.get('regDate')||todayStr(), birth:f.get('birth')||'', gender:f.get('gender')||'',
     locker:f.get('locker').trim(), phone:f.get('phone').trim(),
     manageFee:!!f.get('manageFee'),
-    fee:Number(f.get('fee'))||0, feePayDate:f.get('feePayDate')||'',
+    fee:Number(f.get('fee'))||0, feeCycle:Number(f.get('feeCycle'))||1, feePayDate:f.get('feePayDate')||'',
     hasLesson:!!f.get('hasLesson'),
     lessonDays:f.getAll('lessonDays'), lessonTime:f.get('lessonTime')||'',
     lessonFee:Number(f.get('lessonFee'))||0, lessonPayDate:f.get('lessonPayDate')||'',
@@ -526,9 +569,9 @@ function vDetail(id){
   </div></div>
 
   <div class="grid g2" style="align-items:start">
-  <div class="card"><h2>💰 회비 ${badge(st)}</h2>
+  <div class="card"><h2>💰 ${FL()} ${badge(st)}</h2>
     <div class="detailgrid">
-      <div class="item"><div class="k">월 회비</div><div class="v">${fmtWon(m.fee)}원</div></div>
+      <div class="item"><div class="k">${FL()} (${m.feeCycle||1}개월)</div><div class="v">${fmtWon(m.fee)}원</div></div>
       <div class="item"><div class="k">최근 납부일</div><div class="v">${fmtDate(m.feePayDate)}</div></div>
       <div class="item"><div class="k">다음 납부 예정일</div><div class="v" style="color:${st.code==='overdue'?'var(--bad)':st.code==='grace'?'var(--warn)':'var(--ink)'}">${fmtDate(st.due)}</div></div>
     </div>
@@ -612,9 +655,10 @@ function vFees(){
     return rank(oa.code)-rank(ob.code)||a.name.localeCompare(b.name,'ko');
   });
   const logs=db.payLogs.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20);
-  return `<div class="pagehead"><div><h1>회비 관리</h1><div class="sub">납부일 +1개월 = 다음 예정일 · 예정일 3일 초과 시 미납(알림 대상)</div></div></div>
+  const stats=monthlyStats();
+  return `<div class="pagehead"><div><h1>${FL()} 관리</h1><div class="sub">납부일 + 주기 = 다음 예정일 · 예정일 3일 초과 시 미납(알림 대상)</div></div></div>
   <div class="card"><h2>회원별 납부 상태</h2>
-    ${ms.length?`<div class="tablewrap"><table><tr><th>이름</th><th>단체</th><th>월 회비</th><th>최근 납부일</th><th>다음 예정일</th><th>상태</th><th></th></tr>
+    ${ms.length?`<div class="tablewrap"><table><tr><th>이름</th><th>단체</th><th>${FL()}</th><th>최근 납부일</th><th>다음 예정일</th><th>상태</th><th></th></tr>
     ${ms.map(m=>{const st=feeStatus(m);
       return `<tr><td><b style="cursor:pointer" onclick="go('detail','${m.id}')">${esc(m.name)}</b></td><td class="muted">${esc(groupName(m.groupId))}</td>
       <td>${m.manageFee===false?'-':fmtWon(m.fee)+'원'}</td><td>${m.manageFee===false?'-':fmtDate(m.feePayDate)}</td><td>${fmtDate(st.due)}</td><td>${badge(st)}</td>
@@ -625,8 +669,23 @@ function vFees(){
     ${logs.length?`<div class="tablewrap"><table><tr><th>날짜</th><th>이름</th><th>구분</th><th>금액</th></tr>
     ${logs.map(p=>{const m=db.members.find(x=>x.id===p.memberId);
       return `<tr><td>${fmtDate(p.date)}</td><td>${m?esc(m.name):'(삭제됨)'}</td>
-      <td><span class="badge ${p.type==='lesson'?'b-brand':'b-ok'}">${p.type==='lesson'?'레슨비':'회비'}</span></td><td><b>${fmtWon(p.amount)}원</b></td></tr>`;}).join('')}</table></div>`
-    :'<div class="empty">납부 내역이 없습니다</div>'}</div>`;
+      <td><span class="badge ${p.type==='lesson'?'b-brand':'b-ok'}">${p.type==='lesson'?'레슨비':FL()}</span></td><td><b>${fmtWon(p.amount)}원</b></td></tr>`;}).join('')}</table></div>`
+    :'<div class="empty">납부 내역이 없습니다</div>'}</div>
+  <div class="card"><h2>📈 월별 수입 통계 (최근 6개월)</h2>
+    <div class="tablewrap"><table><tr><th>월</th><th>${FL()}</th><th>레슨비</th><th>합계</th></tr>
+    ${stats.map(s=>`<tr><td><b>${s.ym}</b></td><td>${fmtWon(s.fee)}원</td><td>${fmtWon(s.lesson)}원</td><td><b>${fmtWon(s.fee+s.lesson)}원</b></td></tr>`).join('')}</table></div></div>`;
+}
+function monthlyStats(){
+  const out=[];const t=new Date();
+  for(let i=5;i>=0;i--){
+    const d=new Date(t.getFullYear(),t.getMonth()-i,1);
+    const ym=d.getFullYear()+'-'+pad(d.getMonth()+1);
+    const logs=db.payLogs.filter(p=>p.date.startsWith(ym));
+    out.push({ym:ym.replace('-','.'),
+      fee:logs.filter(p=>p.type!=='lesson').reduce((s,p)=>s+(p.amount||0),0),
+      lesson:logs.filter(p=>p.type==='lesson').reduce((s,p)=>s+(p.amount||0),0)});
+  }
+  return out;
 }
 function lessonFeeTable(){
   const ms=db.members.filter(m=>m.hasLesson).sort((a,b)=>{
@@ -735,6 +794,7 @@ function fillTemplate(body,m){
   const lPeriod=lStart&&lEnd?fmtKor(lStart)+' ~ '+fmtKor(lEnd):'-';
   return body
     .replaceAll('{이름}',m.name).replaceAll('{단체}',groupName(m.groupId))
+    .replaceAll('{상호}',S().studioName)
     .replaceAll('{이용기간}',period)
     .replaceAll('{시작일}',fmtKor(start)).replaceAll('{만료일}',fmtKor(end))
     .replaceAll('{레슨기간}',lPeriod)
@@ -748,31 +808,76 @@ function getTargets(tpl){
   if(!tpl)return{list:[],label:'대상'};
   if(tpl.id==='t3')return{list:db.members.filter(m=>m.hasLesson&&lessonStatus(m).finished),label:'레슨 재등록 대상'};
   if(tpl.id==='t4')return{list:db.members.filter(m=>{const s=lessonFeeStatus(m);return s&&s.code==='overdue';}),label:'레슨 등록기간 만료 대상 (미납)'};
+  if(tpl.id==='t5')return{list:db.members.filter(m=>m.hasLesson),label:'레슨 회원 전체'};
+  if(tpl.id==='t6')return{list:db.members.slice(),label:'전체 회원'};
   return{list:db.members.filter(m=>feeStatus(m).code==='overdue'),label:'이용기간 만료 대상 (미납)'};
+}
+let notifyTarget={mode:'auto',groupId:'',memberId:''};
+function effTargets(tpl){
+  if(notifyTarget.mode==='all')return{list:db.members.slice(),label:'전체 회원'};
+  if(notifyTarget.mode==='group'){
+    const g=db.groups.find(g=>g.id===notifyTarget.groupId)||db.groups[0];
+    return{list:g?db.members.filter(m=>m.groupId===g.id):[],label:g?'['+g.name+'] 단체 회원':'단체 없음'};
+  }
+  if(notifyTarget.mode==='member'){
+    const m=db.members.find(x=>x.id===notifyTarget.memberId)||db.members[0];
+    return{list:m?[m]:[],label:m?m.name+'님 (개인)':'개인'};
+  }
+  return getTargets(tpl);
+}
+function rowBadge(tpl,m){
+  if(notifyTarget.mode!=='auto')return '<span class="badge b-brand">공지 대상</span>';
+  if(tpl.id==='t3'){const ls=lessonStatus(m);return ls?'<span class="badge b-bad">'+ls.done+'/'+ls.total+'회 완료</span>':'';}
+  if(tpl.id==='t4')return lbadge(lessonFeeStatus(m));
+  if(tpl.id==='t5'||tpl.id==='t6')return '<span class="badge b-brand">공지 대상</span>';
+  return badge(feeStatus(m));
 }
 function vNotify(){
   if(!notifyTplId&&db.templates.length)notifyTplId=db.templates[0].id;
   const tpl=db.templates.find(t=>t.id===notifyTplId)||db.templates[0];
-  const tg=getTargets(tpl);
+  const tg=effTargets(tpl);
   const targets=tg.list, targetLabel=tg.label;
   const sent=db.sentLogs.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,15);
-  return `<div class="pagehead"><div><h1>알림 문구 관리</h1><div class="sub">카카오톡에 붙여넣을 문구를 자동 생성합니다 (직접 발송)</div></div></div>
+  return `<div class="pagehead"><div><h1>알림·공지</h1><div class="sub">카카오톡에 붙여넣을 문구를 자동 생성합니다 (직접 발송)</div></div></div>
   <div class="card"><h2>발송 문구 템플릿</h2>
-    <div class="row"><select style="flex:1;min-width:150px" onchange="notifyTplId=this.value;render()">
+    <div class="row"><select style="flex:1;min-width:150px" onchange="notifyTplId=this.value;tplEdit=null;render()">
       ${db.templates.map(t=>`<option value="${t.id}" ${tpl&&tpl.id===t.id?'selected':''}>${esc(t.name)}</option>`).join('')}</select>
       <button class="btn sm" onclick="editTemplate()">문구 수정</button>
       <button class="btn sm" onclick="addTemplate()">새 템플릿</button>
       <button class="btn sm danger" onclick="delTemplate()">삭제</button></div>
-    ${tpl?`<div class="copybox mt">${esc(tpl.body)}</div>
-    <div class="muted mt">사용 가능 변수: {이름} {단체} {이용기간} {시작일} {만료일} {레슨기간} {레슨시작일} {레슨만료일} {예정일} {레슨예정일} {회비} {레슨비} {총횟수} {전화번호}</div>`:''}
+    <div class="row mt">
+      <span class="muted" style="font-weight:700">보낼 대상:</span>
+      <select style="width:auto" onchange="notifyTarget.mode=this.value;render()">
+        <option value="auto" ${notifyTarget.mode==='auto'?'selected':''}>자동 (템플릿 기준)</option>
+        <option value="all" ${notifyTarget.mode==='all'?'selected':''}>전체 회원</option>
+        <option value="group" ${notifyTarget.mode==='group'?'selected':''}>단체별</option>
+        <option value="member" ${notifyTarget.mode==='member'?'selected':''}>개인별</option></select>
+      ${notifyTarget.mode==='group'?`<select style="width:auto" onchange="notifyTarget.groupId=this.value;render()">
+        ${db.groups.map(g=>`<option value="${g.id}" ${notifyTarget.groupId===g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select>`:''}
+      ${notifyTarget.mode==='member'?`<select style="width:auto" onchange="notifyTarget.memberId=this.value;render()">
+        ${db.members.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(m=>`<option value="${m.id}" ${notifyTarget.memberId===m.id?'selected':''}>${esc(m.name)} (${esc(groupName(m.groupId))})</option>`).join('')}</select>`:''}
+    </div>
+    ${tplEdit?`
+    <div class="mt" style="background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:14px">
+      <div class="field" style="margin-bottom:10px"><label>템플릿 이름</label>
+        <input id="tplName" value="${tplEdit.mode==='edit'?esc(tpl.name):''}" placeholder="예: 여름 특강 안내"></div>
+      <div class="field"><label>문구 내용 (전체를 보면서 자유롭게 수정하세요)</label>
+        <textarea id="tplBody" rows="12" style="min-height:240px;line-height:1.7;resize:vertical">${tplEdit.mode==='edit'?esc(tpl.body):'안녕하세요, {상호}입니다.\n\n'}</textarea></div>
+      <div class="muted mt">사용 가능 변수: {이름} {단체} {상호} {이용기간} {시작일} {만료일} {레슨기간} {레슨시작일} {레슨만료일} {예정일} {레슨예정일} {회비} {레슨비} {총횟수} {전화번호}</div>
+      <div class="row mt">
+        <button class="btn primary" onclick="saveTemplateEdit()">💾 저장</button>
+        <button class="btn" onclick="tplEdit=null;render()">취소</button></div>
+    </div>`
+    :tpl?`<div class="copybox mt">${esc(tpl.body)}</div>
+    <div class="muted mt">사용 가능 변수: {이름} {단체} {상호} {이용기간} {시작일} {만료일} {레슨기간} {레슨시작일} {레슨만료일} {예정일} {레슨예정일} {회비} {레슨비} {총횟수} {전화번호}</div>`:''}
   </div>
   <div class="card"><h2>📋 ${targetLabel} (${targets.length}명)
     ${targets.length?`<span><button class="btn sm" onclick="copyAll()">전체 문구 복사</button>
     <button class="btn sm primary" onclick="markSent()">발송 완료 기록</button></span>`:''}</h2>
-    ${targets.length?targets.map(m=>{const st=feeStatus(m);const text=fillTemplate(tpl.body,m);
+    ${targets.length?targets.map(m=>{const text=fillTemplate(tpl.body,m);
       return `<div style="padding:12px 0;border-bottom:1px solid #f1f5f9">
       <div class="row"><b>${esc(m.name)}</b><span class="muted">${esc(m.phone||'전화번호 없음')}</span>
-      ${tpl.id==='t3'?'<span class="badge b-bad">'+lessonStatus(m).done+'/'+lessonStatus(m).total+'회 완료</span>':tpl.id==='t4'?lbadge(lessonFeeStatus(m)):badge(st)}
+      ${rowBadge(tpl,m)}
       <div class="spacer"></div>
       <button class="btn sm" onclick="copyText(document.getElementById('msg-${m.id}').textContent,'${esc(m.name)}님 문구 복사됨')">📋 문구 복사</button></div>
       <div class="copybox mt" id="msg-${m.id}">${esc(text)}</div></div>`;}).join('')
@@ -785,41 +890,109 @@ function vNotify(){
 }
 function copyAll(){
   const tpl=db.templates.find(t=>t.id===notifyTplId);
-  const targets=getTargets(tpl).list;
+  const targets=effTargets(tpl).list;
   const text=targets.map(m=>`▶ ${m.name} (${m.phone||'번호없음'})\n${fillTemplate(tpl.body,m)}`).join('\n\n────────────\n\n');
   copyText(text,'전체 '+targets.length+'건 복사되었습니다');
 }
 function markSent(){
   const tpl=db.templates.find(t=>t.id===notifyTplId);
-  const targets=getTargets(tpl).list;
+  const targets=effTargets(tpl).list;
   if(!confirm(targets.length+'명에게 발송 완료로 기록할까요?'))return;
   targets.forEach(m=>db.sentLogs.push({id:uid(),memberId:m.id,name:m.name,date:todayStr(),template:tpl.name,text:fillTemplate(tpl.body,m)}));
   save();render();toast('발송 기록이 저장되었습니다');
 }
+let tplEdit=null; // null | {mode:'edit'|'new'}
 function editTemplate(){
-  const tpl=db.templates.find(t=>t.id===notifyTplId);if(!tpl)return;
-  const nb=prompt('문구 수정 (변수: {이름} {단체} {이용기간} {레슨기간} {시작일} {만료일} {예정일} {회비} {레슨비} {총횟수})',tpl.body);
-  if(nb!=null){tpl.body=nb;save();render();}
+  if(!db.templates.find(t=>t.id===notifyTplId))return;
+  tplEdit={mode:'edit'};render();
 }
-function addTemplate(){
-  const name=prompt('새 템플릿 이름');if(!name)return;
-  const body=prompt('문구 내용 (변수: {이름} {단체} {예정일} {회비} {레슨비})','{단체} {이름}님, 안녕하세요.\n');
-  if(body==null)return;
-  const t={id:uid(),name:name.trim(),body};db.templates.push(t);notifyTplId=t.id;save();render();
+function addTemplate(){tplEdit={mode:'new'};render();}
+function saveTemplateEdit(){
+  const name=document.getElementById('tplName').value.trim();
+  const body=document.getElementById('tplBody').value;
+  if(!name)return toast('템플릿 이름을 입력하세요');
+  if(!body.trim())return toast('문구 내용을 입력하세요');
+  if(tplEdit.mode==='edit'){
+    const tpl=db.templates.find(t=>t.id===notifyTplId);
+    tpl.name=name;tpl.body=body;
+  }else{
+    const t={id:uid(),name,body};db.templates.push(t);notifyTplId=t.id;
+  }
+  tplEdit=null;save();render();toast('템플릿이 저장되었습니다');
 }
 function delTemplate(){
   if(db.templates.length<=1)return toast('최소 1개의 템플릿이 필요합니다');
   const tpl=db.templates.find(t=>t.id===notifyTplId);
   if(!confirm(`'${tpl.name}' 템플릿을 삭제할까요?`))return;
-  db.templates=db.templates.filter(t=>t.id!==notifyTplId);notifyTplId=db.templates[0].id;save();render();
+  db.templates=db.templates.filter(t=>t.id!==notifyTplId);notifyTplId=db.templates[0].id;tplEdit=null;save();render();
+}
+
+/* ================= 설정 ================= */
+const ICONS=['🎷','🎹','🎤','🥁','🎸','🎻','🎺','🪗','🎵','🎶'];
+function vSettings(){
+  const s=S();
+  return `<div class="pagehead"><div><h1>설정</h1><div class="sub">내 교실에 맞게 앱을 바꿔 보세요</div></div></div>
+  <div class="card"><h2>기본 정보</h2>
+    <div class="formgrid g2">
+      <div class="field"><label>상호명 (교실·연습실 이름)</label><input id="setName" value="${esc(s.studioName)}" placeholder="예: 행복 노래교실"></div>
+      <div class="field"><label>대표 아이콘</label><select id="setIcon">${ICONS.map(i=>`<option ${s.icon===i?'selected':''}>${i}</option>`).join('')}</select></div>
+      <div class="field"><label>${'회비 명칭'}</label><select id="setFeeLabel">${['회비','수강료','이용료','월회비'].map(l=>`<option ${s.feeLabel===l?'selected':''}>${l}</option>`).join('')}</select></div>
+      <div class="field"><label>기본 레슨 횟수 (결제 1회당)</label><input id="setLessonTotal" type="number" min="1" value="${s.lessonTotal||4}"></div>
+    </div>
+    <button class="btn primary mt" onclick="saveSettings()">설정 저장</button></div>
+  <div class="card"><h2>제공자 표시 (하단 홍보 문구)</h2>
+    <div class="formgrid g2">
+      <div class="field"><label>제공자 이름</label><input id="setOwner" value="${esc(s.ownerName)}" placeholder="studio MUSE"></div>
+      <div class="field"><label>연락처·카톡채널 (선택)</label><input id="setContact" value="${esc(s.ownerContact)}" placeholder="예: 010-0000-0000 / pf.kakao.com/..."></div>
+    </div>
+    <button class="btn primary mt" onclick="saveSettings()">저장</button></div>
+  <div class="card"><h2>접속 비밀번호 변경</h2>
+    <div class="row"><input id="setPin" type="password" inputmode="numeric" placeholder="새 비밀번호 (숫자 4자리 이상)" style="max-width:240px">
+    <button class="btn sm primary" onclick="changePin()">변경</button></div></div>
+  <div class="card"><h2>데이터 관리</h2>
+    <div class="row">
+      <button class="btn" onclick="exportData()">⬇️ 전체 백업 (JSON)</button>
+      <button class="btn" onclick="document.getElementById('importFile').click()">⬆️ 백업 복원</button>
+      <button class="btn" onclick="exportCSV()">📊 회원명단 엑셀(CSV) 내보내기</button></div>
+    <div class="muted mt">마지막 백업: ${s.lastBackup?fmtDate(s.lastBackup):'없음'} · 주 1회 백업을 권장합니다. 기기를 바꿀 때는 백업 → 새 기기에서 복원하세요.</div></div>
+  <div class="card"><h2>개인정보 안내</h2>
+    <div class="muted" style="line-height:1.7">이 앱에 입력한 회원 정보(이름, 전화번호, 생년월일 등)는 <b>사용 중인 기기의 브라우저에만 저장</b>되며, 외부 서버로 전송되거나 수집되지 않습니다.
+    데이터 보호와 백업은 사용자 책임이며, 회원 정보는 관련 법령(개인정보보호법)에 따라 회원 동의 하에 수집·관리하시기 바랍니다.</div></div>`;
+}
+function saveSettings(){
+  S().studioName=document.getElementById('setName').value.trim()||'내 교실';
+  S().icon=document.getElementById('setIcon').value;
+  S().feeLabel=document.getElementById('setFeeLabel').value;
+  S().lessonTotal=Number(document.getElementById('setLessonTotal').value)||4;
+  S().ownerName=document.getElementById('setOwner').value.trim()||'studio MUSE';
+  S().ownerContact=document.getElementById('setContact').value.trim();
+  save();render();toast('설정이 저장되었습니다');
+}
+function changePin(){
+  const v=document.getElementById('setPin').value.trim();
+  if(v.length<4)return toast('숫자 4자리 이상 입력하세요');
+  S().pin=v;save();toast('비밀번호가 변경되었습니다');
+  document.getElementById('setPin').value='';
 }
 
 /* ================= 백업/복원 ================= */
 function exportData(){
+  S().lastBackup=todayStr();save();
   const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download='회원관리_백업_'+todayStr()+'.json';a.click();
-  toast('백업 파일이 다운로드됩니다');
+  toast('백업 파일이 다운로드됩니다');render();
+}
+function exportCSV(){
+  const rows=[['이름','단체','등록일','생년월일','성별','락카','전화번호',FL(),'납부주기(개월)','최근납부일','다음예정일','상태','레슨','레슨요일','레슨시간','레슨비','레슨시작일','진행회차','총회차']];
+  db.members.forEach(m=>{const st=feeStatus(m);
+    rows.push([m.name,groupName(m.groupId),m.regDate,m.birth,m.gender,m.locker,m.phone,
+      m.manageFee===false?'':m.fee,m.feeCycle||1,m.feePayDate,st.due||'',st.label,
+      m.hasLesson?'Y':'',(m.lessonDays||[]).join('·'),m.lessonTime,m.hasLesson?m.lessonFee:'',m.lessonPayDate,m.lessonDone||0,m.lessonTotal||4]);});
+  const csv='﻿'+rows.map(r=>r.map(c=>'"'+String(c??'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='회원명단_'+todayStr()+'.csv';a.click();
+  toast('엑셀용 CSV 파일이 다운로드됩니다');
 }
 document.getElementById('importFile').addEventListener('change',function(){
   const f=this.files[0];if(!f)return;
@@ -867,7 +1040,9 @@ function render(){
   else if(view==='fees')el.innerHTML=vFees();
   else if(view==='lessons')el.innerHTML=vLessons();
   else if(view==='notify')el.innerHTML=vNotify();
+  else if(view==='settings')el.innerHTML=vSettings();
 }
+initLock();
 render();
 </script>
 <script>
