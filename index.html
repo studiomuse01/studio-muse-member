@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>회원관리 studioMUSE</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f172a">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="회원관리">
+<style>
+:root{
+  --bg:#f4f6f9; --card:#ffffff; --ink:#1e293b; --sub:#64748b; --line:#e2e8f0;
+  --brand:#2563eb; --brand-soft:#eff6ff; --ok:#16a34a; --ok-soft:#f0fdf4;
+  --warn:#d97706; --warn-soft:#fffbeb; --bad:#dc2626; --bad-soft:#fef2f2;
+  --radius:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;background:var(--bg);color:var(--ink);font-size:15px}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:15px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;width:100%;background:#fff;color:var(--ink)}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--brand);outline-offset:-1px;border-color:var(--brand)}
+label{font-size:13px;color:var(--sub);display:block;margin-bottom:4px;font-weight:600}
+
+/* layout */
+.app{display:flex;min-height:100vh}
+.sidebar{width:260px;background:#0f172a;color:#cbd5e1;flex-shrink:0;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+.sidebar .logo{padding:20px 18px;font-weight:800;color:#fff;font-size:16px;border-bottom:1px solid #1e293b;line-height:1.4}
+.sidebar .logo small{display:block;font-weight:400;color:#64748b;font-size:11px;margin-top:2px}
+.nav{flex:1;padding:10px 8px;overflow-y:auto}
+.nav button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;color:#94a3b8;padding:13px 12px;border-radius:8px;font-size:24px;font-weight:600;margin-bottom:2px}
+.nav button:hover{background:#1e293b;color:#fff}
+.nav button.active{background:var(--brand);color:#fff;font-weight:600}
+.nav .ico{width:30px;text-align:center;font-size:24px}
+.sidebar .foot{padding:12px;border-top:1px solid #1e293b;font-size:11px;color:#475569}
+.main{flex:1;min-width:0;padding:22px;padding-bottom:90px}
+.pagehead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.pagehead h1{font-size:21px}
+.pagehead .sub{color:var(--sub);font-size:13px;margin-top:3px}
+
+/* mobile nav */
+.mobiletop{display:none}
+.tabbar{display:none}
+@media(max-width:860px){
+  .sidebar{display:none}
+  .main{padding:10px;padding-bottom:110px}
+  .mobiletop{display:flex;align-items:center;justify-content:space-between;background:#0f172a;color:#fff;padding:10px 12px;font-weight:800;position:sticky;top:0;z-index:40;flex-wrap:wrap;gap:6px}
+  #brandMobile{font-size:26px}
+  .mobiletop small{font-weight:400;color:#94a3b8;font-size:12px}
+  .mobiletop .btn.topnav{background:#1e293b;border-color:#334155;color:#fff;font-size:19px;font-weight:700;padding:9px 12px}
+  .tabbar{display:flex;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);z-index:40;padding-bottom:env(safe-area-inset-bottom)}
+  .tabbar button{flex:1;background:none;border:none;padding:8px 1px 10px;font-size:20px;font-weight:700;color:var(--sub);display:flex;flex-direction:column;align-items:center;gap:3px;white-space:nowrap}
+  .tabbar button .ico{font-size:36px}
+  .tabbar button.active{color:var(--brand);font-weight:700}
+  /* 큰 글씨 + 한 화면 배치 */
+  body{font-size:19px}
+  .card{padding:12px;margin-bottom:9px}
+  .card h2{font-size:20px;margin-bottom:8px}
+  .btn{font-size:18px;padding:11px 14px}
+  .btn.sm{font-size:16px;padding:8px 11px}
+  input,select,textarea{font-size:18px}
+  label{font-size:16px}
+  table{font-size:17px}
+  th{font-size:14px}
+  .muted{font-size:15px}
+  .badge{font-size:14px}
+  .detailgrid .item .k{font-size:14px}
+  .detailgrid .item .v{font-size:19px}
+  .pagehead{margin-bottom:8px}
+  .pagehead h1{font-size:24px}
+  .pagehead .sub{font-size:15px}
+  .grid{gap:8px}
+  .empty{font-size:17px;padding:14px 8px}
+}
+
+/* components */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+.card h2{font-size:15px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.grid{display:grid;gap:12px}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g2{grid-template-columns:repeat(2,1fr)}
+@media(max-width:860px){.g4,.g3{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.formgrid.g2{grid-template-columns:1fr}}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;cursor:pointer}
+.stat .n{font-size:26px;font-weight:800;margin-top:4px}
+.stat .t{font-size:12.5px;color:var(--sub);font-weight:600}
+.stat.bad .n{color:var(--bad)} .stat.ok .n{color:var(--ok)} .stat.brand .n{color:var(--brand)} .stat.warn .n{color:var(--warn)}
+
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 14px;border-radius:8px;font-size:13.5px;font-weight:600}
+.btn:hover{background:#f8fafc}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.primary:hover{background:#1d4ed8}
+.btn.danger{color:var(--bad);border-color:#fecaca}
+.btn.sm{padding:5px 10px;font-size:12.5px}
+.btn.ghost{border:none;background:none;color:var(--brand)}
+
+.badge{display:inline-block;padding:3px 9px;border-radius:99px;font-size:11.5px;font-weight:700;white-space:nowrap}
+.b-ok{background:var(--ok-soft);color:var(--ok)}
+.b-warn{background:var(--warn-soft);color:var(--warn)}
+.b-bad{background:var(--bad-soft);color:var(--bad)}
+.b-gray{background:#f1f5f9;color:var(--sub)}
+.b-brand{background:var(--brand-soft);color:var(--brand)}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;color:var(--sub);font-size:12px;font-weight:700;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+tr.click{cursor:pointer}
+tr.click:hover td{background:#f8fafc}
+.tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+.formgrid{display:grid;gap:14px}
+.field.full{grid-column:1/-1}
+.checks{display:flex;gap:6px;flex-wrap:wrap}
+.checks label.day{display:inline-flex;align-items:center;justify-content:center;width:40px;height:36px;border:1px solid var(--line);border-radius:8px;font-size:13.5px;color:var(--ink);cursor:pointer;margin:0;font-weight:600}
+.checks input{display:none}
+.checks input:checked+span{color:#fff}
+.checks label.day:has(input:checked){background:var(--brand);border-color:var(--brand);color:#fff}
+.switch{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink);font-weight:600;cursor:pointer}
+.switch input{width:18px;height:18px}
+
+.empty{text-align:center;color:var(--sub);padding:28px 10px;font-size:13.5px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.spacer{flex:1}
+.mt{margin-top:12px}
+.muted{color:var(--sub);font-size:12.5px}
+.big{font-size:17px;font-weight:700}
+.copybox{background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:12px;font-size:13.5px;white-space:pre-wrap;line-height:1.6}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:10px 20px;border-radius:99px;font-size:13.5px;z-index:99;opacity:0;transition:opacity .25s;pointer-events:none}
+.toast.show{opacity:1}
+.detailgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.detailgrid .item{background:#f8fafc;border-radius:8px;padding:9px 11px}
+.detailgrid .item .k{font-size:11px;color:var(--sub);font-weight:700}
+.detailgrid .item .v{font-size:14px;font-weight:600;margin-top:2px}
+.progress{height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--brand);border-radius:99px}
+.lessonday{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.lessonday .dh{background:#f1f5f9;padding:8px 12px;font-weight:800;font-size:13.5px}
+.lessonday .dh.today{background:var(--brand);color:#fff}
+.lessonday .li{padding:9px 12px;border-top:1px solid #f1f5f9;font-size:13.5px;cursor:pointer}
+.lessonday .li:hover{background:#f8fafc}
+.weekgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+@media(max-width:860px){.weekgrid{grid-template-columns:1fr}}
+.searchbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.searchbar input,.searchbar select{width:auto;flex:1;min-width:120px}
+@media(max-width:640px){
+  table.members th:nth-child(4),table.members td:nth-child(4),
+  table.members th:nth-child(5),table.members td:nth-child(5){display:none}
+}
+</style>
+</head>
+<body>
+<div id="lockScreen" style="position:fixed;inset:0;background:#0f172a;z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px">
+  <div style="font-size:40px" id="lockIcon">🎷</div>
+  <div style="color:#fff;font-weight:800;font-size:18px" id="lockTitle">회원관리</div>
+  <div style="color:#94a3b8;font-size:13px;text-align:center" id="lockHint">이메일로 로그인하세요</div>
+  <input type="email" id="authEmail" placeholder="이메일" autocomplete="username" style="max-width:270px;padding:12px">
+  <input type="password" id="authPw" placeholder="비밀번호 (6자 이상)" autocomplete="current-password" style="max-width:270px;padding:12px" onkeydown="if(event.key==='Enter')fbLogin()">
+  <button class="btn primary" style="width:270px;justify-content:center;padding:12px" onclick="fbLogin()">로그인</button>
+  <button class="btn" style="width:270px;justify-content:center" onclick="fbSignup()">처음이신가요? 회원가입</button>
+  <a href="#" style="color:#64748b;font-size:12px" onclick="fbReset();return false">비밀번호를 잊으셨나요?</a>
+  <div id="lockMsg" style="color:#f87171;font-size:13px;min-height:18px;text-align:center"></div>
+  <div style="color:#475569;font-size:11.5px;text-align:center;max-width:300px">☁️ 데이터는 본인 계정의 클라우드에 안전하게 저장되어<br>폰을 바꿔도 로그인하면 그대로 유지됩니다</div>
+</div>
+<div class="mobiletop"><div id="brandMobile">🎷 회원관리</div><div class="row" style="gap:6px">
+  <button class="btn topnav" onclick="go('dashboard')">🏠 홈</button>
+  <button class="btn topnav" onclick="go('members')">👥 목록</button>
+  <button class="btn topnav" onclick="go('settings')">⚙️</button></div></div>
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo" id="brandSide">🎷 회원관리</div>
+    <nav class="nav" id="sidenav"></nav>
+    <div class="foot" id="sideFoot"></div>
+  </aside>
+  <main class="main" id="main"></main>
+</div>
+<nav class="tabbar" id="tabbar"></nav>
+<div class="toast" id="toast"></div>
+<input type="file" id="importFile" accept=".json" style="display:none">
+
+<script>
+/* ================= 데이터 ================= */
+const DBKEY='saxadmin_v1';
+const DAYS=['월','화','수','목','금','토','일'];
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+
+const DEFAULT_TEMPLATES=[
+ {id:'t1',name:'연습실 이용기간 만료 안내',body:'안녕하세요. 항상 "{단체명}"을 이용해 주셔서 진심으로 감사드립니다.\n\n회원님께서 등록하신 연습실 이용기간({이용기간})이 만료되었음을 알려 드립니다.\n\n연습하시면서 불편한 점이나 개선이 필요한 부분이 있으시면 언제든 말씀 부탁드립니다.\n더 좋은 환경으로 보답하겠습니다.\n\n감사합니다.'},
+ {id:'t2',name:'회비 납부 예정 안내',body:'[{단체}] {이름}님, 안녕하세요. 🎷\n이번 달 회비({회비}원) 납부 예정일은 {예정일}입니다.\n미리 안내드립니다. 감사합니다!'},
+ {id:'t3',name:'레슨 재등록 안내',body:'[{단체}] {이름}님, 안녕하세요. 🎷\n등록하신 레슨 {총횟수}회가 모두 진행되었습니다.\n계속 수강을 원하시면 레슨비 {레슨비}원 결제 부탁드립니다.\n감사합니다!'},
+ {id:'t4',name:'레슨 등록기간 만료 안내',body:'안녕하세요. 항상 "{단체명}"을 이용해 주셔서 진심으로 감사드립니다.\n\n회원님께서 등록하신 레슨 기간({레슨기간})이 만료되었음을 알려 드립니다.\n\n계속 수강을 원하시면 레슨비 납부 부탁드립니다.\n레슨을 받으시면서 불편한 점이나 개선이 필요한 부분이 있으시면 언제든 말씀 부탁드립니다.\n더 좋은 레슨으로 보답하겠습니다.\n\n감사합니다.'},
+ {id:'t5',name:'레슨 일정 변경 공지',body:'{이름}님, 안녕하세요. {상호}입니다.\n\n레슨 일정이 변경되어 안내드립니다.\n\n▶ 변경 내용: (문구 수정 버튼을 눌러 내용을 입력하세요)\n\n확인 부탁드립니다. 감사합니다.'},
+ {id:'t6',name:'행사 공지 (전체)',body:'안녕하세요, {상호}입니다.\n\n▶ 행사 안내: (문구 수정 버튼을 눌러 내용을 입력하세요)\n\n많은 참여 부탁드립니다. 감사합니다.'}
+];
+
+function load(){
+  try{const d=JSON.parse(localStorage.getItem(DBKEY));if(d&&d.members)return d;}catch(e){}
+  return {groups:[],members:[],payLogs:[],lessonLogs:[],templates:JSON.parse(JSON.stringify(DEFAULT_TEMPLATES)),sentLogs:[]};
+}
+let db=load();
+function migrateDb(){
+// 기본 템플릿 누락분 보충 (업데이트 대응)
+DEFAULT_TEMPLATES.forEach(t=>{if(!db.templates.find(x=>x.id===t.id))db.templates.push(JSON.parse(JSON.stringify(t)));});
+// 설정 기본값
+db.settings=Object.assign({studioName:'studio MUSE',icon:'🎷',feeLabel:'회비',lessonTotal:4,ownerName:'studio MUSE',ownerContact:'',pin:'',lastBackup:''},db.settings||{});
+// 금전출납부 기본값
+db.ledger=db.ledger||[];
+db.cats=db.cats||{income:['행사참가비','후원금','기타 수입'],expense:['임대료','전기요금','통신요금','강사료','수리비','기타 지출']};
+}
+migrateDb();
+const S=()=>db.settings, FL=()=>db.settings.feeLabel||'회비';
+
+/* ================= 접속(로그인) 화면 ================= */
+function initLock(){
+  document.getElementById('lockIcon').textContent=S().icon;
+  document.getElementById('lockTitle').textContent='회원관리 · '+S().studioName;
+}
+function unlock(){}
+function save(){const j=JSON.stringify(db);localStorage.setItem(DBKEY,j);if(window.queueCloudSave)window.queueCloudSave(j);}
+
+/* ================= 날짜 유틸 ================= */
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const todayStr=()=>iso(new Date());
+function addMonths(ds,n){
+  const d=new Date(ds+'T00:00:00');const day=d.getDate();
+  d.setMonth(d.getMonth()+n);
+  if(d.getDate()<day)d.setDate(0); // 말일 보정 (1/31 +1개월 → 2/28)
+  return iso(d);
+}
+function daysBetween(a,b){ // b - a (일수)
+  return Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/86400000);
+}
+const fmtDate=ds=>ds?ds.replace(/-/g,'.'):'-';
+const fmtKor=ds=>{if(!ds)return '-';const d=new Date(ds+'T00:00:00');return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일';};
+function addDays(ds,n){const d=new Date(ds+'T00:00:00');d.setDate(d.getDate()+n);return iso(d);}
+const fmtWon=n=>(n||0).toLocaleString('ko-KR');
+
+/* ================= 상태 계산 ================= */
+// 회비: 납부일 +1개월 = 다음 예정일. 예정일 경과 시 '경과', 예정일+3일 초과 시 '미납(알림 대상)'
+function feeStatus(m){
+  if(m.manageFee===false)return{code:'nofee',label:'레슨비만',due:null,over:0};
+  if(!m.feePayDate)return{code:'none',label:'납부기록 없음',due:null,over:0};
+  const due=addMonths(m.feePayDate,m.feeCycle||1);
+  const over=daysBetween(due,todayStr());
+  if(over<=0)return{code:'ok',label:'정상',due,over};
+  if(over<=3)return{code:'grace',label:'예정일 경과',due,over};
+  return{code:'overdue',label:'미납',due,over};
+}
+function lessonStatus(m){
+  if(!m.hasLesson)return null;
+  const total=m.lessonTotal||4, done=m.lessonDone||0;
+  return{total,done,finished:done>=total};
+}
+// 레슨 회차별 예정 날짜: 납부일(시작일)부터 등록 요일에 총횟수만큼. 휴강일은 건너뛰어 자동 연장
+function lessonSessionDates(m){
+  if(!m.lessonPayDate||!(m.lessonDays||[]).length)return[];
+  const skips=new Set((m.lessonSkips||[]).map(s=>s.date));
+  const total=m.lessonTotal||4, dates=[];
+  let d=new Date(m.lessonPayDate+'T00:00:00'), guard=0;
+  while(dates.length<total&&guard<370){
+    const ds=iso(d);
+    if(m.lessonDays.includes(DAYS[(d.getDay()+6)%7])&&!skips.has(ds))dates.push(ds);
+    d.setDate(d.getDate()+1);guard++;
+  }
+  return dates;
+}
+// 레슨비: 시작일(납부일)부터 총횟수(기본 4회) 진행 시 만료
+function lessonFeeStatus(m){
+  if(!m.hasLesson)return null;
+  const total=m.lessonTotal||4, done=m.lessonDone||0;
+  if(!m.lessonPayDate)return{code:'none',label:'납부기록 없음',due:null,over:0,total,done};
+  const dates=lessonSessionDates(m);
+  const due=dates.length?dates[dates.length-1]:addMonths(m.lessonPayDate,1); // 마지막 회차 예정일 = 만료 예정일
+  if(done>=total)return{code:'overdue',label:total+'회 만료',due,over:0,total,done};
+  const over=daysBetween(due,todayStr());
+  if(over>3)return{code:'grace',label:'만료 예정일 경과',due,over,total,done};
+  return{code:'ok',label:'진행중',due,over:0,total,done};
+}
+function lbadge(st){
+  if(!st)return'';
+  if(st.code==='ok')return '<span class="badge b-ok">진행중 '+st.done+'/'+st.total+'회</span>';
+  if(st.code==='grace')return '<span class="badge b-warn">만료 예정일 경과</span>';
+  if(st.code==='overdue')return '<span class="badge b-bad">'+st.total+'회 만료 · 재등록</span>';
+  return '<span class="badge b-gray">기록 없음</span>';
+}
+function groupName(id){const g=db.groups.find(g=>g.id===id);return g?g.name:'(미지정)';}
+function badge(st){
+  if(st.code==='ok')return '<span class="badge b-ok">정상</span>';
+  if(st.code==='grace')return '<span class="badge b-warn">예정일 경과 '+st.over+'일</span>';
+  if(st.code==='overdue')return '<span class="badge b-bad">미납 '+st.over+'일</span>';
+  if(st.code==='nofee')return '<span class="badge b-gray">레슨비만</span>';
+  return '<span class="badge b-gray">기록 없음</span>';
+}
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ================= 네비게이션 ================= */
+const MENUS=[
+ {id:'dashboard',ico:'📊',label:'대시보드'},
+ {id:'groups',ico:'🏛️',label:'회원 단체'},
+ {id:'members',ico:'👥',label:'회원 목록'},
+ {id:'register',ico:'➕',label:'회원 등록'},
+ {id:'fees',ico:'💰',label:'회비 관리'},
+ {id:'lessons',ico:'📅',label:'레슨 일정'},
+ {id:'ledger',ico:'🧾',label:'금전출납부'},
+ {id:'notify',ico:'🔔',label:'알림·공지'},
+ {id:'settings',ico:'⚙️',label:'설정'},
+];
+const TABS=['fees','lessons','ledger','notify'];
+let view='dashboard', viewParam=null;
+function go(v,p){view=v;viewParam=p??null;render();window.scrollTo(0,0);}
+function menuLabel(m){return m.id==='fees'?FL()+' 관리':m.label;}
+function renderNav(){
+  document.title='회원관리 '+S().studioName;
+  document.getElementById('brandSide').innerHTML=S().icon+' 회원관리<small>'+esc(S().studioName)+'</small>';
+  document.getElementById('brandMobile').innerHTML=S().icon+' 회원관리 <small>'+esc(S().studioName)+'</small>';
+  document.getElementById('sideFoot').innerHTML=
+    '제공: '+esc(S().ownerName)+(S().ownerContact?'<br>'+esc(S().ownerContact):'')+
+    '<br><span style="color:#334155">데이터는 내 계정 클라우드에 저장됩니다</span>';
+  document.getElementById('sidenav').innerHTML=MENUS.map(m=>
+    `<button class="${view===m.id?'active':''}" onclick="go('${m.id}')"><span class="ico">${m.ico}</span>${menuLabel(m)}</button>`).join('');
+  document.getElementById('tabbar').innerHTML=MENUS.filter(m=>TABS.includes(m.id)).map(m=>
+    `<button class="${view===m.id?'active':''}" onclick="go('${m.id}')"><span class="ico">${m.ico}</span>${menuLabel(m).replace(/[\s·]/g,'')}</button>`).join('');
+}
+
+/* ================= 토스트 ================= */
+let toastTimer;
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),1800);}
+function copyText(text,msg){
+  navigator.clipboard?.writeText(text).then(()=>toast(msg||'복사되었습니다')).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();toast(msg||'복사되었습니다');
+  });
+}
+
+/* ================= 대시보드 ================= */
+function vDashboard(){
+  const ms=db.members;
+  const overdue=ms.filter(m=>feeStatus(m).code==='overdue');
+  const lessonOver=ms.filter(m=>{const s=lessonFeeStatus(m);return s&&s.code==='overdue';});
+  const overdueTotal=new Set([...overdue,...lessonOver].map(m=>m.id)).size;
+  const grace=ms.filter(m=>feeStatus(m).code==='grace');
+  const lessonMs=ms.filter(m=>m.hasLesson);
+  const finished=lessonMs.filter(m=>lessonStatus(m).finished);
+  const todayDay=DAYS[(new Date().getDay()+6)%7];
+  const todayLessons=lessonMs.filter(m=>(m.lessonDays||[]).includes(todayDay)).sort((a,b)=>(a.lessonTime||'').localeCompare(b.lessonTime||''));
+  const thisMonth=todayStr().slice(0,7);
+  const monthIncome=db.payLogs.filter(p=>p.date.startsWith(thisMonth)).reduce((s,p)=>s+(p.amount||0),0);
+  const needBackup=ms.length>0&&(!S().lastBackup||daysBetween(S().lastBackup,todayStr())>=7);
+  return `
+  <div class="pagehead"><div><h1>대시보드</h1><div class="sub">${fmtDate(todayStr())} (${todayDay}) · 오늘의 현황</div></div>
+   <div class="row"><button class="btn sm" onclick="exportData()">⬇️ 백업</button><button class="btn sm" onclick="document.getElementById('importFile').click()">⬆️ 복원</button></div></div>
+  ${needBackup?`<div class="card" style="background:var(--warn-soft);border-color:#fcd34d"><div class="row">
+    <div>⚠️ <b>백업을 권장합니다.</b> <span class="muted">${S().lastBackup?'마지막 백업: '+fmtDate(S().lastBackup):'아직 백업 기록이 없습니다'} · 기기 분실이나 브라우저 데이터 삭제에 대비해 주 1회 백업하세요.</span></div>
+    <div class="spacer"></div><button class="btn sm primary" onclick="exportData()">지금 백업</button></div></div>`:''}
+  <div class="card"><h2>📊 오늘의 현황</h2>
+    <div class="detailgrid" style="grid-template-columns:repeat(2,1fr)">
+      <div class="item" style="cursor:pointer" onclick="go('members')"><div class="k">전체 회원</div><div class="v" style="font-size:24px;color:var(--brand)">${ms.length}명</div></div>
+      <div class="item" style="cursor:pointer" onclick="go('fees')"><div class="k">이번 달 수납액</div><div class="v" style="font-size:24px;color:var(--ok)">${fmtWon(monthIncome)}원</div></div>
+      <div class="item" style="cursor:pointer" onclick="go('notify')"><div class="k">미납</div><div class="v" style="font-size:24px;color:var(--bad)">${overdueTotal}명</div></div>
+      <div class="item" style="cursor:pointer" onclick="go('fees')"><div class="k">납부일 경과</div><div class="v" style="font-size:24px;color:var(--warn)">${grace.length}명</div></div>
+    </div></div>
+  <div class="grid g2 mt" style="align-items:start">
+    <div class="card"><h2 style="white-space:nowrap;display:block">🔴 미납 알림 대상</h2>
+      <button class="btn sm ghost" style="padding-left:0;margin:-4px 0 6px" onclick="go('notify')">알림 문구 보기 →</button>
+      ${(overdue.length||lessonOver.length)?
+        overdue.map(m=>{const st=feeStatus(m);return `<div class="row" style="padding:8px 0;border-bottom:1px solid #f1f5f9;cursor:pointer" onclick="go('detail','${m.id}')">
+        <div><b>${esc(m.name)}</b> <span class="badge b-ok">회비</span> <span class="muted">${esc(groupName(m.groupId))}</span><div class="muted">예정일 ${fmtDate(st.due)} · ${st.over}일 경과</div></div>
+        <div class="spacer"></div>${badge(st)}</div>`;}).join('')+
+        lessonOver.map(m=>{const st=lessonFeeStatus(m);return `<div class="row" style="padding:8px 0;border-bottom:1px solid #f1f5f9;cursor:pointer" onclick="go('detail','${m.id}')">
+        <div><b>${esc(m.name)}</b> <span class="badge b-brand">레슨비</span> <span class="muted">${esc(groupName(m.groupId))}</span><div class="muted">${st.total}회 완료 · 재등록 필요</div></div>
+        <div class="spacer"></div>${lbadge(st)}</div>`;}).join('')
+        :'<div class="empty">미납 회원이 없습니다 👍</div>'}
+      ${grace.length?'<div class="muted mt">⚠️ 예정일 경과(3일 이내): '+grace.map(m=>esc(m.name)).join(', ')+'</div>':''}
+    </div>
+    <div class="card"><h2 style="white-space:nowrap;display:block">📅 오늘의 레슨 (${todayDay})</h2>
+      <button class="btn sm ghost" style="padding-left:0;margin:-4px 0 6px" onclick="go('lessons')">전체 일정 보기 →</button>
+      ${todayLessons.length?todayLessons.map(m=>{const ls=lessonStatus(m);return `<div class="row" style="padding:8px 0;border-bottom:1px solid #f1f5f9;cursor:pointer" onclick="go('detail','${m.id}')">
+        <b style="min-width:52px">${esc(m.lessonTime||'--:--')}</b><div>${esc(m.name)} <span class="muted">${esc(groupName(m.groupId))}</span></div>
+        <div class="spacer"></div><span class="badge ${ls.finished?'b-bad':'b-brand'}">${ls.done}/${ls.total}회${ls.finished?' 완료':''}</span></div>`;}).join(''):'<div class="empty">오늘 예정된 레슨이 없습니다</div>'}
+      ${finished.length?'<div class="muted mt">🔁 레슨 재등록 필요: '+finished.map(m=>esc(m.name)).join(', ')+'</div>':''}
+    </div>
+  </div>
+  <div class="card"><div class="row" style="justify-content:center"><button class="btn primary" style="font-size:22px;padding:14px 20px" onclick="go('groups')">단체 만들기</button><button class="btn" style="font-size:22px;padding:14px 20px" onclick="go('register')">회원 등록</button></div></div>`;
+}
+
+/* ================= 회원 단체 ================= */
+function vGroups(){
+  return `<div class="pagehead"><div><h1>회원 단체</h1><div class="sub">동호회·앙상블 등 소속 단체를 관리합니다</div></div></div>
+  <div class="card"><h2>단체 추가</h2>
+    <div class="row"><input id="gname" placeholder="단체명 (예: 뮤즈색소폰)" style="flex:2;min-width:160px">
+    <input id="gmemo" placeholder="메모 (선택)" style="flex:2;min-width:120px">
+    <button class="btn primary" onclick="addGroup()">추가</button></div></div>
+  <div class="card"><h2>단체 목록 (${db.groups.length})</h2>
+    ${db.groups.length?`<div class="tablewrap"><table><tr><th>단체명</th><th>회원 수</th><th>메모</th><th></th></tr>
+    ${db.groups.map(g=>{const cnt=db.members.filter(m=>m.groupId===g.id).length;
+      return `<tr><td><b>${esc(g.name)}</b></td><td>${cnt}명</td><td class="muted">${esc(g.memo||'')}</td>
+      <td style="text-align:right;white-space:nowrap"><button class="btn sm" onclick="renameGroup('${g.id}')">수정</button> <button class="btn sm danger" onclick="delGroup('${g.id}')">삭제</button></td></tr>`;}).join('')}
+    </table></div>`:'<div class="empty">등록된 단체가 없습니다</div>'}</div>`;
+}
+function addGroup(){
+  const name=document.getElementById('gname').value.trim();
+  if(!name)return toast('단체명을 입력하세요');
+  db.groups.push({id:uid(),name,memo:document.getElementById('gmemo').value.trim()});
+  save();render();toast('단체가 추가되었습니다');
+}
+function renameGroup(id){
+  const g=db.groups.find(g=>g.id===id);const n=prompt('단체명 수정',g.name);
+  if(n&&n.trim()){g.name=n.trim();save();render();}
+}
+function delGroup(id){
+  const cnt=db.members.filter(m=>m.groupId===id).length;
+  if(!confirm(cnt?`소속 회원이 ${cnt}명 있습니다. 삭제하면 회원의 소속이 '(미지정)'이 됩니다. 삭제할까요?`:'삭제할까요?'))return;
+  db.groups=db.groups.filter(g=>g.id!==id);
+  db.members.forEach(m=>{if(m.groupId===id)m.groupId=null;});
+  save();render();
+}
+
+/* ================= 회원 목록 ================= */
+let mFilter={q:'',group:'',status:''};
+function vMembers(){
+  let ms=db.members.slice();
+  if(mFilter.q)ms=ms.filter(m=>m.name.includes(mFilter.q)||(m.phone||'').includes(mFilter.q));
+  if(mFilter.group)ms=ms.filter(m=>m.groupId===mFilter.group);
+  if(mFilter.status)ms=ms.filter(m=>{
+    const st=feeStatus(m);
+    if(mFilter.status==='overdue')return st.code==='overdue';
+    if(mFilter.status==='grace')return st.code==='grace';
+    if(mFilter.status==='ok')return st.code==='ok';
+    if(mFilter.status==='lesson')return m.hasLesson;
+    return true;});
+  ms.sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+  return `<div class="pagehead"><div><h1>회원 목록</h1><div class="sub">총 ${db.members.length}명</div></div>
+    <div class="row"><button class="btn" onclick="exportCSV()">📊 엑셀 내보내기</button>
+    <button class="btn primary" onclick="go('register')">➕ 회원 등록</button></div></div>
+  <div class="searchbar">
+    <input placeholder="이름·전화번호 검색" value="${esc(mFilter.q)}" oninput="mFilter.q=this.value;renderList()">
+    <select onchange="mFilter.group=this.value;renderList()"><option value="">전체 단체</option>${db.groups.map(g=>`<option value="${g.id}" ${mFilter.group===g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select>
+    <select onchange="mFilter.status=this.value;renderList()">
+      <option value="">전체 상태</option><option value="ok" ${mFilter.status==='ok'?'selected':''}>정상</option>
+      <option value="grace" ${mFilter.status==='grace'?'selected':''}>예정일 경과</option>
+      <option value="overdue" ${mFilter.status==='overdue'?'selected':''}>미납</option>
+      <option value="lesson" ${mFilter.status==='lesson'?'selected':''}>레슨 회원</option></select>
+  </div>
+  <div class="card" id="memberList">${memberTable(ms)}</div>`;
+}
+function memberTable(ms){
+  if(!ms.length)return '<div class="empty">조건에 맞는 회원이 없습니다</div>';
+  return `<div class="tablewrap"><table class="members"><tr><th>이름</th><th>단체</th><th>회비 상태</th><th>다음 납부 예정일</th><th>레슨</th><th>전화번호</th></tr>
+  ${ms.map(m=>{const st=feeStatus(m);const ls=lessonStatus(m);
+    return `<tr class="click" onclick="go('detail','${m.id}')"><td><b>${esc(m.name)}</b></td><td class="muted">${esc(groupName(m.groupId))}</td>
+    <td>${badge(st)}</td><td>${fmtDate(st.due)}</td>
+    <td>${ls?`<span class="badge ${ls.finished?'b-bad':'b-brand'}">${DAYS.filter(d=>(m.lessonDays||[]).includes(d)).join('·')} ${ls.done}/${ls.total}</span>`:'<span class="muted">-</span>'}</td>
+    <td class="muted">${esc(m.phone||'')}</td></tr>`;}).join('')}</table></div>`;
+}
+function renderList(){
+  let ms=db.members.slice();
+  if(mFilter.q)ms=ms.filter(m=>m.name.includes(mFilter.q)||(m.phone||'').includes(mFilter.q));
+  if(mFilter.group)ms=ms.filter(m=>m.groupId===mFilter.group);
+  if(mFilter.status)ms=ms.filter(m=>{const st=feeStatus(m);
+    if(mFilter.status==='overdue')return st.code==='overdue';
+    if(mFilter.status==='grace')return st.code==='grace';
+    if(mFilter.status==='ok')return st.code==='ok';
+    if(mFilter.status==='lesson')return m.hasLesson;return true;});
+  ms.sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+  document.getElementById('memberList').innerHTML=memberTable(ms);
+}
+
+/* ================= 회원 등록/수정 ================= */
+function vRegister(editId){
+  const m=editId?db.members.find(x=>x.id===editId):null;
+  const v=k=>m?esc(m[k]??''):'';
+  return `<div class="pagehead"><div><h1>${m?'회원 정보 수정':'회원 등록'}</h1><div class="sub">${m?esc(m.name)+' 님의 정보를 수정합니다':'새 회원의 정보를 입력하세요'}</div></div>
+    ${m?`<button class="btn" onclick="go('detail','${m.id}')">← 상세로</button>`:''}</div>
+  ${!m?`<div class="card"><h2>📇 여러 명 한꺼번에 등록 <span class="muted" style="font-weight:400">이름·전화번호만 먼저 등록하고, 세부사항은 회원을 눌러 나중에 입력</span></h2>
+    <div class="row" style="margin-bottom:8px">
+      <button class="btn sm" type="button" onclick="pickContacts()">📱 연락처에서 선택</button>
+      <span class="muted">또는 아래에 붙여넣기 — 한 줄에 한 명 (이름 전화번호)</span></div>
+    <textarea id="bulkText" rows="5" style="line-height:1.7" placeholder="홍길동 010-1234-5678
+김영희 010-2345-6789
+(엑셀 명단을 복사해서 붙여넣어도 됩니다)"></textarea>
+    <div class="row mt">
+      <select id="bulkGroup" style="width:auto;min-width:150px"><option value="">(단체 미지정)</option>
+        ${db.groups.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join('')}</select>
+      <button class="btn primary" type="button" onclick="bulkRegister()">✅ 일괄 등록</button></div>
+  </div>`:''}
+  <form class="card" onsubmit="saveMember(event,'${editId||''}')">
+    <h2>기본 정보</h2>
+    <div class="formgrid g2">
+      <div class="field"><label>이름 *</label><input name="name" required value="${v('name')}" placeholder="홍길동"></div>
+      <div class="field"><label>소속 단체</label><select name="groupId">
+        <option value="">(미지정)</option>${db.groups.map(g=>`<option value="${g.id}" ${m&&m.groupId===g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select></div>
+      <div class="field"><label>등록일자</label><input type="date" name="regDate" value="${m?v('regDate'):todayStr()}"></div>
+      <div class="field"><label>생년월일</label><input type="date" name="birth" value="${v('birth')}"></div>
+      <div class="field"><label>성별</label><select name="gender">
+        <option value="">선택</option><option ${m&&m.gender==='남'?'selected':''}>남</option><option ${m&&m.gender==='여'?'selected':''}>여</option></select></div>
+      <div class="field"><label>락카번호</label><input name="locker" value="${v('locker')}" placeholder="예: A-12"></div>
+      <div class="field"><label>전화번호</label><input name="phone" value="${v('phone')}" placeholder="010-0000-0000" inputmode="tel"></div>
+    </div>
+    <h2 class="mt" style="margin-top:22px">회비</h2>
+    <label class="switch" style="margin-bottom:12px"><input type="checkbox" name="manageFee" ${m?(m.manageFee!==false?'checked':''):'checked'} onchange="document.getElementById('feeFields').style.display=this.checked?'':'none'"> 회비 관리 대상 <span class="muted" style="font-weight:400">(해제 시 레슨비만 관리하는 회원)</span></label>
+    <div class="formgrid g2" id="feeFields" style="display:${m&&m.manageFee===false?'none':''}">
+      <div class="field"><label>${FL()} (원)</label><input type="number" name="fee" value="${m?m.fee||'':''}" placeholder="50000" inputmode="numeric"></div>
+      <div class="field"><label>납부 주기</label><select name="feeCycle" onchange="previewDue(document.querySelector('input[name=feePayDate]'))">
+        ${[1,3,6,12].map(c=>`<option value="${c}" ${(m?m.feeCycle||1:1)===c?'selected':''}>${c}개월</option>`).join('')}</select></div>
+      <div class="field"><label>최근 ${FL()} 납부일자</label><input type="date" name="feePayDate" value="${v('feePayDate')}" onchange="previewDue(this)">
+        <div class="muted" id="duePreview" style="margin-top:4px">${m&&m.feePayDate?'다음 납부 예정일: '+fmtDate(addMonths(m.feePayDate,m.feeCycle||1)):'납부일 입력 시 다음 예정일 자동 계산'}</div></div>
+    </div>
+    <h2 class="mt" style="margin-top:22px">레슨</h2>
+    <label class="switch" style="margin-bottom:12px"><input type="checkbox" name="hasLesson" ${m&&m.hasLesson?'checked':''} onchange="document.getElementById('lessonFields').style.display=this.checked?'':'none'"> 레슨 수강 회원</label>
+    <div id="lessonFields" style="display:${m&&m.hasLesson?'':'none'}">
+      <div class="formgrid g2">
+        <div class="field full"><label>레슨 요일 (매주)</label><div class="checks">
+          ${DAYS.map(d=>`<label class="day"><input type="checkbox" name="lessonDays" value="${d}" ${m&&(m.lessonDays||[]).includes(d)?'checked':''}><span>${d}</span></label>`).join('')}</div></div>
+        <div class="field"><label>레슨 시간</label><input type="time" name="lessonTime" value="${v('lessonTime')}"></div>
+        <div class="field"><label>레슨비 (원)</label><input type="number" name="lessonFee" value="${m?m.lessonFee||'':''}" placeholder="120000" inputmode="numeric"></div>
+        <div class="field"><label>레슨비 납부일</label><input type="date" name="lessonPayDate" value="${v('lessonPayDate')}" onchange="previewLessonDue(this)">
+          <div class="muted" id="lessonDuePreview" style="margin-top:4px">${m&&m.lessonPayDate?'다음 레슨비 납부 예정일: '+fmtDate(addMonths(m.lessonPayDate,1)):'납부일 입력 시 다음 예정일(+1개월) 자동 계산'}</div></div>
+        <div class="field"><label>총 레슨 횟수 (결제 1회당)</label><input type="number" name="lessonTotal" value="${m?m.lessonTotal||4:(S().lessonTotal||4)}" min="1"></div>
+        <div class="field"><label>현재 진행 회차</label><input type="number" name="lessonDone" value="${m?m.lessonDone||0:0}" min="0"></div>
+      </div>
+    </div>
+    <div class="row mt" style="margin-top:22px">
+      <button class="btn primary" type="submit">${m?'수정 저장':'회원 등록'}</button>
+      <button class="btn" type="button" onclick="go('${m?'detail':'members'}'${m?",'"+m.id+"'":''})">취소</button>
+    </div>
+  </form>`;
+}
+/* ---- 일괄 등록 ---- */
+async function pickContacts(){
+  if(!('contacts' in navigator&&navigator.contacts.select))
+    return toast('이 브라우저는 연락처 선택을 지원하지 않습니다. 붙여넣기를 이용하세요.');
+  try{
+    const cs=await navigator.contacts.select(['name','tel'],{multiple:true});
+    if(!cs.length)return;
+    const ta=document.getElementById('bulkText');
+    const lines=cs.map(c=>((c.name&&c.name[0])||'이름없음')+' '+((c.tel&&c.tel[0])||'')).join('\n');
+    ta.value=(ta.value.trim()?ta.value.trim()+'\n':'')+lines;
+    toast(cs.length+'명을 가져왔습니다');
+  }catch(e){/* 사용자가 취소 */}
+}
+function parseBulk(text){
+  const out=[];
+  text.split(/\n+/).forEach(line=>{
+    line=line.trim();if(!line)return;
+    const parts=line.split(/[\t,]+|\s+/).filter(Boolean);
+    let phone='';const names=[];
+    parts.forEach(p=>{const d=p.replace(/[^0-9]/g,'');
+      if(d.length>=9&&!phone)phone=p;else names.push(p);});
+    const name=names.join(' ').trim();
+    if(name)out.push({name,phone});
+  });
+  return out;
+}
+function bulkRegister(){
+  const rows=parseBulk(document.getElementById('bulkText').value);
+  if(!rows.length)return toast('등록할 내용이 없습니다. 한 줄에 한 명씩 입력하세요.');
+  const gid=document.getElementById('bulkGroup').value||null;
+  // 중복 확인: 전화번호(또는 번호 없으면 이름) 기준
+  const existPhones=new Set(db.members.map(m=>(m.phone||'').replace(/[^0-9]/g,'')).filter(Boolean));
+  const existNames=new Set(db.members.map(m=>m.name));
+  const fresh=[],dup=[];
+  rows.forEach(r=>{
+    const pd=(r.phone||'').replace(/[^0-9]/g,'');
+    if((pd&&existPhones.has(pd))||(!pd&&existNames.has(r.name)))dup.push(r);else fresh.push(r);
+  });
+  if(!fresh.length)return toast('모두 이미 등록된 회원입니다');
+  const preview=fresh.slice(0,10).map(r=>r.name+' '+(r.phone||'')).join('\n')+(fresh.length>10?'\n… 외 '+(fresh.length-10)+'명':'');
+  if(!confirm(fresh.length+'명을 등록할까요?'+(dup.length?' (중복 '+dup.length+'명 제외)':'')+'\n\n'+preview))return;
+  fresh.forEach(r=>db.members.push({id:uid(),groupId:gid,name:r.name,regDate:todayStr(),
+    birth:'',gender:'',locker:'',phone:r.phone,manageFee:true,fee:0,feeCycle:1,feePayDate:'',
+    hasLesson:false,lessonDays:[],lessonTime:'',lessonFee:0,lessonPayDate:'',
+    lessonTotal:S().lessonTotal||4,lessonDone:0}));
+  save();toast(fresh.length+'명 등록 완료! 회원을 눌러 세부사항을 입력하세요');go('members');
+}
+function previewDue(inp){
+  const el=document.getElementById('duePreview');
+  const cy=Number(document.querySelector('select[name=feeCycle]')?.value)||1;
+  el.textContent=inp.value?'다음 납부 예정일: '+fmtDate(addMonths(inp.value,cy))+' ('+cy+'개월)':'납부일 입력 시 다음 예정일 자동 계산';
+}
+function previewLessonDue(inp){
+  const el=document.getElementById('lessonDuePreview');
+  el.textContent=inp.value?'다음 레슨비 납부 예정일: '+fmtDate(addMonths(inp.value,1)):'납부일 입력 시 다음 예정일(+1개월) 자동 계산';
+}
+function saveMember(e,editId){
+  e.preventDefault();
+  const f=new FormData(e.target);
+  const data={
+    name:f.get('name').trim(), groupId:f.get('groupId')||null,
+    regDate:f.get('regDate')||todayStr(), birth:f.get('birth')||'', gender:f.get('gender')||'',
+    locker:f.get('locker').trim(), phone:f.get('phone').trim(),
+    manageFee:!!f.get('manageFee'),
+    fee:Number(f.get('fee'))||0, feeCycle:Number(f.get('feeCycle'))||1, feePayDate:f.get('feePayDate')||'',
+    hasLesson:!!f.get('hasLesson'),
+    lessonDays:f.getAll('lessonDays'), lessonTime:f.get('lessonTime')||'',
+    lessonFee:Number(f.get('lessonFee'))||0, lessonPayDate:f.get('lessonPayDate')||'',
+    lessonTotal:Number(f.get('lessonTotal'))||4, lessonDone:Number(f.get('lessonDone'))||0
+  };
+  if(editId){
+    const m=db.members.find(x=>x.id===editId);Object.assign(m,data);
+    save();toast('수정되었습니다');go('detail',editId);
+  }else{
+    const m={id:uid(),...data};db.members.push(m);
+    if(m.feePayDate)db.payLogs.push({id:uid(),memberId:m.id,date:m.feePayDate,amount:m.fee,type:'fee',memo:'등록 시 입력'});
+    if(m.hasLesson&&m.lessonPayDate)db.payLogs.push({id:uid(),memberId:m.id,date:m.lessonPayDate,amount:m.lessonFee,type:'lesson',memo:'등록 시 입력'});
+    save();toast('회원이 등록되었습니다');go('detail',m.id);
+  }
+}
+
+/* ================= 회원 상세 ================= */
+function vDetail(id){
+  const m=db.members.find(x=>x.id===id);
+  if(!m)return '<div class="empty">회원을 찾을 수 없습니다</div>';
+  const st=feeStatus(m), ls=lessonStatus(m);
+  const logs=db.payLogs.filter(p=>p.memberId===id).sort((a,b)=>b.date.localeCompare(a.date));
+  const sent=db.sentLogs.filter(s=>s.memberId===id).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
+  return `<div class="pagehead"><div><h1>${esc(m.name)} <span style="font-size:13px;font-weight:400;color:var(--sub)">${esc(groupName(m.groupId))}</span></h1>
+    <div class="sub">등록일 ${fmtDate(m.regDate)}</div></div>
+    <div class="row"><button class="btn" onclick="go('members')">← 목록</button>
+    <button class="btn" onclick="go('register','${m.id}')">✏️ 수정</button>
+    <button class="btn danger" onclick="delMember('${m.id}')">삭제</button></div></div>
+
+  <div class="card"><h2>기본 정보</h2><div class="detailgrid">
+    <div class="item"><div class="k">생년월일</div><div class="v">${fmtDate(m.birth)}</div></div>
+    <div class="item"><div class="k">성별</div><div class="v">${esc(m.gender||'-')}</div></div>
+    <div class="item"><div class="k">전화번호</div><div class="v">${esc(m.phone||'-')}</div></div>
+    <div class="item"><div class="k">락카번호</div><div class="v">${esc(m.locker||'-')}</div></div>
+  </div></div>
+
+  <div class="grid g2" style="align-items:start">
+  <div class="card"><h2>💰 ${FL()} ${badge(st)}</h2>
+    <div class="detailgrid">
+      <div class="item"><div class="k">${FL()} (${m.feeCycle||1}개월)</div><div class="v">${fmtWon(m.fee)}원</div></div>
+      <div class="item"><div class="k">최근 납부일</div><div class="v">${fmtDate(m.feePayDate)}</div></div>
+      <div class="item"><div class="k">다음 납부 예정일</div><div class="v" style="color:${st.code==='overdue'?'var(--bad)':st.code==='grace'?'var(--warn)':'var(--ink)'}">${fmtDate(st.due)}</div></div>
+    </div>
+    <div class="row mt"><input type="date" id="payDate" value="${todayStr()}" style="width:auto">
+    <button class="btn primary sm" onclick="payFee('${m.id}')">✅ 회비 납부 처리</button></div>
+    ${st.code==='overdue'?'<div class="muted mt" style="color:var(--bad)">⚠️ 예정일 3일 초과 — 미납 알림 대상입니다. <a href="#" onclick="go(\'notify\');return false">알림 문구 →</a></div>':''}
+  </div>
+
+  ${ls?`<div class="card"><h2>🎵 레슨 <span class="badge ${ls.finished?'b-bad':'b-brand'}">${ls.done}/${ls.total}회${ls.finished?' · 재등록 필요':''}</span></h2>
+    <div class="detailgrid">
+      <div class="item"><div class="k">요일 / 시간</div><div class="v">${DAYS.filter(d=>(m.lessonDays||[]).includes(d)).join('·')||'-'} ${esc(m.lessonTime||'')}</div></div>
+      <div class="item"><div class="k">레슨비</div><div class="v">${fmtWon(m.lessonFee)}원</div></div>
+      <div class="item"><div class="k">시작일 (납부일)</div><div class="v">${fmtDate(m.lessonPayDate)}</div></div>
+      <div class="item"><div class="k">${ls.total}회 만료 예정일</div><div class="v">${fmtDate(lessonFeeStatus(m).due)}</div></div>
+    </div>
+    <div class="mt"><div class="progress"><i style="width:${Math.min(100,ls.done/ls.total*100)}%"></i></div>
+    <div class="muted" style="margin-top:4px">진행 ${ls.done}회 / 총 ${ls.total}회 · 잔여 ${Math.max(0,ls.total-ls.done)}회</div></div>
+    ${(m.lessonSkips||[]).length?`<div class="muted mt">📌 휴강: ${m.lessonSkips.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(s=>fmtDate(s.date)+(s.memo?' ('+esc(s.memo)+')':'')).join(', ')}</div>`:''}
+    <div class="row mt">
+      <button class="btn primary sm" onclick="lessonPlus('${m.id}')">➕ 레슨 1회 진행</button>
+      <button class="btn sm" onclick="lessonMinus('${m.id}')">↩️ 회차 -1</button>
+      <button class="btn sm" onclick="payLesson('${m.id}')">💳 레슨비 결제 (회차 초기화)</button>
+    </div></div>`
+  :'<div class="card"><h2>🎵 레슨</h2><div class="empty">레슨 미수강 회원입니다.<br>수정 화면에서 레슨을 등록할 수 있습니다.</div></div>'}
+  </div>
+
+  <div class="card"><h2>납부 내역 (${logs.length})</h2>
+    ${logs.length?`<div class="tablewrap"><table><tr><th>날짜</th><th>구분</th><th>금액</th><th>메모</th><th></th></tr>
+    ${logs.map(p=>`<tr><td>${fmtDate(p.date)}</td><td><span class="badge ${p.type==='lesson'?'b-brand':'b-ok'}">${p.type==='lesson'?'레슨비':'회비'}</span></td>
+    <td><b>${fmtWon(p.amount)}원</b></td><td class="muted">${esc(p.memo||'')}</td>
+    <td style="text-align:right"><button class="btn sm danger" onclick="delPayLog('${p.id}','${m.id}')">삭제</button></td></tr>`).join('')}</table></div>`
+    :'<div class="empty">납부 내역이 없습니다</div>'}</div>
+
+  ${sent.length?`<div class="card"><h2>최근 알림 발송 기록</h2>${sent.map(s=>`<div style="padding:7px 0;border-bottom:1px solid #f1f5f9" class="muted">${fmtDate(s.date)} · ${esc(s.template)}</div>`).join('')}</div>`:''}`;
+}
+function payFee(id){
+  const m=db.members.find(x=>x.id===id);
+  const d=document.getElementById('payDate').value||todayStr();
+  m.feePayDate=d;
+  db.payLogs.push({id:uid(),memberId:id,date:d,amount:m.fee,type:'fee',memo:''});
+  save();render();toast('납부 처리 완료 · 다음 예정일 '+fmtDate(addMonths(d,1)));
+}
+function payLesson(id){
+  const m=db.members.find(x=>x.id===id);
+  if(!confirm(`레슨비 ${fmtWon(m.lessonFee)}원 결제 처리하고 회차를 0으로 초기화할까요?`))return;
+  m.lessonPayDate=todayStr();m.lessonDone=0;
+  db.payLogs.push({id:uid(),memberId:id,date:todayStr(),amount:m.lessonFee,type:'lesson',memo:'레슨 재등록'});
+  save();render();toast('레슨비 결제 처리 완료');
+}
+function lessonPlus(id){
+  const m=db.members.find(x=>x.id===id);
+  if((m.lessonDone||0)>=(m.lessonTotal||4))return toast('이미 총 횟수를 채웠습니다. 재결제가 필요합니다.');
+  m.lessonDone=(m.lessonDone||0)+1;
+  db.lessonLogs.push({id:uid(),memberId:id,date:todayStr(),session:m.lessonDone});
+  save();render();toast(`${m.name}님 레슨 ${m.lessonDone}회차 기록`);
+}
+function lessonMinus(id){
+  const m=db.members.find(x=>x.id===id);
+  if((m.lessonDone||0)<=0)return;
+  m.lessonDone--;save();render();
+}
+function delPayLog(pid,mid){
+  if(!confirm('이 납부 기록을 삭제할까요?'))return;
+  db.payLogs=db.payLogs.filter(p=>p.id!==pid);save();render();
+}
+function delMember(id){
+  const m=db.members.find(x=>x.id===id);
+  if(!confirm(`${m.name}님을 삭제할까요? 납부·레슨 기록도 함께 삭제됩니다.`))return;
+  db.members=db.members.filter(x=>x.id!==id);
+  db.payLogs=db.payLogs.filter(p=>p.memberId!==id);
+  db.lessonLogs=db.lessonLogs.filter(l=>l.memberId!==id);
+  db.sentLogs=db.sentLogs.filter(s=>s.memberId!==id);
+  save();toast('삭제되었습니다');go('members');
+}
+
+/* ================= 회비 관리 ================= */
+function vFees(){
+  const ms=db.members.slice().sort((a,b)=>{
+    const oa=feeStatus(a),ob=feeStatus(b);
+    const rank=c=>c==='overdue'?0:c==='grace'?1:c==='none'?2:c==='nofee'?4:3;
+    return rank(oa.code)-rank(ob.code)||a.name.localeCompare(b.name,'ko');
+  });
+  const logs=db.payLogs.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20);
+  const stats=monthlyStats();
+  return `<div class="pagehead"><div><h1>${FL()} 관리</h1><div class="sub">납부일 + 주기 = 다음 예정일 · 예정일 3일 초과 시 미납(알림 대상)</div></div></div>
+  <div class="card"><h2>회원별 납부 상태</h2>
+    ${ms.length?`<div class="tablewrap"><table><tr><th>이름</th><th>단체</th><th>${FL()}</th><th>최근 납부일</th><th>다음 예정일</th><th>상태</th><th></th></tr>
+    ${ms.map(m=>{const st=feeStatus(m);
+      return `<tr><td><b style="cursor:pointer" onclick="go('detail','${m.id}')">${esc(m.name)}</b></td><td class="muted">${esc(groupName(m.groupId))}</td>
+      <td>${m.manageFee===false?'-':fmtWon(m.fee)+'원'}</td><td>${m.manageFee===false?'-':fmtDate(m.feePayDate)}</td><td>${fmtDate(st.due)}</td><td>${badge(st)}</td>
+      <td style="text-align:right">${m.manageFee===false?'':`<button class="btn sm primary" onclick="quickPay('${m.id}')">오늘 납부</button>`}</td></tr>`;}).join('')}</table></div>`
+    :'<div class="empty">등록된 회원이 없습니다</div>'}</div>
+  ${lessonFeeTable()}
+  <div class="card"><h2>최근 납부 내역</h2>
+    ${logs.length?`<div class="tablewrap"><table><tr><th>날짜</th><th>이름</th><th>구분</th><th>금액</th></tr>
+    ${logs.map(p=>{const m=db.members.find(x=>x.id===p.memberId);
+      return `<tr><td>${fmtDate(p.date)}</td><td>${m?esc(m.name):'(삭제됨)'}</td>
+      <td><span class="badge ${p.type==='lesson'?'b-brand':'b-ok'}">${p.type==='lesson'?'레슨비':FL()}</span></td><td><b>${fmtWon(p.amount)}원</b></td></tr>`;}).join('')}</table></div>`
+    :'<div class="empty">납부 내역이 없습니다</div>'}</div>
+  <div class="card"><h2>📈 월별 수입 통계 (최근 6개월)</h2>
+    <div class="tablewrap"><table><tr><th>월</th><th>${FL()}</th><th>레슨비</th><th>합계</th></tr>
+    ${stats.map(s=>`<tr><td><b>${s.ym}</b></td><td>${fmtWon(s.fee)}원</td><td>${fmtWon(s.lesson)}원</td><td><b>${fmtWon(s.fee+s.lesson)}원</b></td></tr>`).join('')}</table></div></div>`;
+}
+function monthlyStats(){
+  const out=[];const t=new Date();
+  for(let i=5;i>=0;i--){
+    const d=new Date(t.getFullYear(),t.getMonth()-i,1);
+    const ym=d.getFullYear()+'-'+pad(d.getMonth()+1);
+    const logs=db.payLogs.filter(p=>p.date.startsWith(ym));
+    out.push({ym:ym.replace('-','.'),
+      fee:logs.filter(p=>p.type!=='lesson').reduce((s,p)=>s+(p.amount||0),0),
+      lesson:logs.filter(p=>p.type==='lesson').reduce((s,p)=>s+(p.amount||0),0)});
+  }
+  return out;
+}
+function lessonFeeTable(){
+  const ms=db.members.filter(m=>m.hasLesson).sort((a,b)=>{
+    const rank=c=>c==='overdue'?0:c==='grace'?1:c==='none'?2:3;
+    return rank(lessonFeeStatus(a).code)-rank(lessonFeeStatus(b).code)||a.name.localeCompare(b.name,'ko');
+  });
+  if(!ms.length)return '';
+  return `<div class="card"><h2>레슨비 납부 상태 <span class="muted" style="font-weight:400">시작일부터 ${''}총횟수(기본 4회) 진행 시 만료</span></h2>
+    <div class="tablewrap"><table><tr><th>이름</th><th>단체</th><th>레슨비</th><th>시작일(납부일)</th><th>만료 예정일</th><th>진행/잔여</th><th>상태</th><th></th></tr>
+    ${ms.map(m=>{const st=lessonFeeStatus(m);const ls=lessonStatus(m);
+      return `<tr><td><b style="cursor:pointer" onclick="go('detail','${m.id}')">${esc(m.name)}</b></td><td class="muted">${esc(groupName(m.groupId))}</td>
+      <td>${fmtWon(m.lessonFee)}원</td><td>${fmtDate(m.lessonPayDate)}</td><td>${fmtDate(st.due)}</td>
+      <td><span class="badge ${ls.finished?'b-bad':'b-brand'}">${ls.done}/${ls.total}회 · 잔여 ${Math.max(0,ls.total-ls.done)}회</span></td>
+      <td>${lbadge(st)}</td>
+      <td style="text-align:right"><button class="btn sm primary" onclick="payLesson('${m.id}')">납부 처리</button></td></tr>`;}).join('')}</table></div></div>`;
+}
+function quickPay(id){
+  const m=db.members.find(x=>x.id===id);
+  if(!confirm(`${m.name}님 회비 ${fmtWon(m.fee)}원을 오늘(${fmtDate(todayStr())}) 납부 처리할까요?`))return;
+  m.feePayDate=todayStr();
+  db.payLogs.push({id:uid(),memberId:id,date:todayStr(),amount:m.fee,type:'fee',memo:''});
+  save();render();toast('납부 처리 완료');
+}
+
+/* ================= 레슨 일정 ================= */
+let weekOffset=0; // 0=이번 주
+function weekDates(off){ // 해당 주 월~일 날짜(iso)
+  const t=new Date();t.setDate(t.getDate()-((t.getDay()+6)%7)+off*7);
+  return DAYS.map((_,i)=>{const d=new Date(t);d.setDate(t.getDate()+i);return iso(d);});
+}
+function moveWeek(n){weekOffset+=n;render();}
+function vLessons(){
+  const lessonMs=db.members.filter(m=>m.hasLesson);
+  const wd=weekDates(weekOffset);
+  const today=todayStr();
+  const allSkips=[];
+  lessonMs.forEach(m=>(m.lessonSkips||[]).forEach(s=>allSkips.push({...s,name:m.name,memberId:m.id})));
+  allSkips.sort((a,b)=>b.date.localeCompare(a.date));
+  return `<div class="pagehead"><div><h1>레슨 일정</h1><div class="sub">레슨 회원 ${lessonMs.length}명 · 매주 월요일~일요일</div></div>
+    <div class="row"><button class="btn sm" onclick="moveWeek(-1)">◀ 지난주</button>
+    <button class="btn sm ${weekOffset===0?'primary':''}" onclick="weekOffset=0;render()">이번 주</button>
+    <button class="btn sm" onclick="moveWeek(1)">다음주 ▶</button></div></div>
+  <div class="muted" style="margin-bottom:10px">📆 ${fmtDate(wd[0])} (월) ~ ${fmtDate(wd[6])} (일)</div>
+  <div class="weekgrid">
+  ${DAYS.map((d,i)=>{
+    const date=wd[i];
+    const list=lessonMs.filter(m=>(m.lessonDays||[]).includes(d)).sort((a,b)=>(a.lessonTime||'').localeCompare(b.lessonTime||''));
+    return `<div class="lessonday"><div class="dh ${date===today?'today':''}">${d} <span style="font-weight:400;font-size:12px">${date.slice(5).replace('-','.')}</span>${date===today?' · 오늘':''}</div>
+    ${list.length?list.map(m=>{const ls=lessonStatus(m);
+      const skip=(m.lessonSkips||[]).find(s=>s.date===date);
+      return `<div class="li" onclick="go('detail','${m.id}')" style="${skip?'opacity:.55':''}">
+      <b>${esc(m.lessonTime||'--:--')}</b> ${esc(m.name)} ${skip?'<span class="badge b-gray">휴강</span>':''}<br>
+      <span class="badge ${ls.finished?'b-bad':'b-brand'}" style="margin-top:3px">${ls.done}/${ls.total}회 · 잔여 ${Math.max(0,ls.total-ls.done)}회</span>
+      ${skip&&skip.memo?`<div class="muted" style="margin-top:2px">※ ${esc(skip.memo)}</div>`:''}</div>`;}).join('')
+    :'<div class="li muted" style="cursor:default">-</div>'}</div>`;}).join('')}
+  </div>
+  <div class="card mt"><h2>레슨 진행 관리 <span class="muted" style="font-weight:400">레슨 후 +1회를 누르면 회차가 기록됩니다</span></h2>
+    ${lessonMs.length?`<div class="tablewrap"><table><tr><th>이름</th><th>요일·시간</th><th>진행/잔여</th><th>시작일</th><th>만료 예정일</th><th>상태</th><th></th></tr>
+    ${lessonMs.map(m=>{const ls=lessonStatus(m);const st=lessonFeeStatus(m);
+      return `<tr><td><b style="cursor:pointer" onclick="go('detail','${m.id}')">${esc(m.name)}</b></td>
+      <td>${DAYS.filter(d=>(m.lessonDays||[]).includes(d)).join('·')} ${esc(m.lessonTime||'')}</td>
+      <td><span class="badge ${ls.finished?'b-bad':'b-brand'}">${ls.done}/${ls.total}회 · 잔여 ${Math.max(0,ls.total-ls.done)}회</span></td>
+      <td>${fmtDate(m.lessonPayDate)}</td><td>${fmtDate(st.due)}</td><td>${lbadge(st)}</td>
+      <td style="text-align:right;white-space:nowrap"><button class="btn sm primary" onclick="lessonPlus('${m.id}')">+1회</button>
+      ${ls.finished?`<button class="btn sm" onclick="payLesson('${m.id}')">재결제</button>`:''}</td></tr>`;}).join('')}</table></div>`
+    :'<div class="empty">레슨 회원이 없습니다. 회원 등록/수정 시 레슨을 설정하세요.</div>'}</div>
+  <div class="card"><h2>📌 휴강 참고표 <span class="muted" style="font-weight:400">일정상 레슨 못 한 날 기록 · 만료 예정일이 자동으로 미뤄집니다</span></h2>
+    ${lessonMs.length?`<div class="row" style="margin-bottom:10px">
+      <select id="skipMember" style="width:auto;min-width:120px">${lessonMs.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('')}</select>
+      <input type="date" id="skipDate" value="${today}" style="width:auto">
+      <input id="skipMemo" placeholder="사유 (예: 연주회, 공휴일)" style="flex:1;min-width:120px">
+      <button class="btn sm primary" onclick="addSkip()">휴강 추가</button></div>`:''}
+    ${allSkips.length?`<div class="tablewrap"><table><tr><th>날짜</th><th>이름</th><th>사유</th><th></th></tr>
+    ${allSkips.map(s=>`<tr><td>${fmtDate(s.date)} (${DAYS[(new Date(s.date+'T00:00:00').getDay()+6)%7]})</td>
+    <td><b style="cursor:pointer" onclick="go('detail','${s.memberId}')">${esc(s.name)}</b></td><td class="muted">${esc(s.memo||'')}</td>
+    <td style="text-align:right"><button class="btn sm danger" onclick="delSkip('${s.memberId}','${s.id}')">삭제</button></td></tr>`).join('')}</table></div>`
+    :'<div class="empty">휴강 기록이 없습니다</div>'}</div>`;
+}
+function addSkip(){
+  const mid=document.getElementById('skipMember').value;
+  const date=document.getElementById('skipDate').value;
+  if(!mid||!date)return toast('회원과 날짜를 선택하세요');
+  const m=db.members.find(x=>x.id===mid);
+  const memo=document.getElementById('skipMemo').value.trim();
+  m.lessonSkips=m.lessonSkips||[];
+  if(m.lessonSkips.find(s=>s.date===date))return toast('이미 등록된 휴강일입니다');
+  m.lessonSkips.push({id:uid(),date,memo});
+  save();render();toast(m.name+'님 휴강 기록 추가');
+}
+function delSkip(mid,sid){
+  const m=db.members.find(x=>x.id===mid);
+  m.lessonSkips=(m.lessonSkips||[]).filter(s=>s.id!==sid);
+  save();render();
+}
+
+/* ================= 알림 문구 관리 ================= */
+let notifyTplId=null;
+function fillTemplate(body,m){
+  const st=feeStatus(m);
+  const lst=lessonFeeStatus(m);
+  // 이용기간: 회비 납부일 ~ 다음 예정일 하루 전 (예: 6월 3일 납부 → 6월 3일 ~ 7월 2일)
+  const start=m.feePayDate||'', end=st.due?addDays(st.due,-1):'';
+  const period=start&&end?fmtDate(start)+' ~ '+fmtDate(end):'-'; // 예: 2026.01.01 ~ 2026.01.31
+  // 레슨기간: 레슨비 납부일(시작일) ~ 마지막 회차(총횟수) 예정일
+  const lStart=m.lessonPayDate||'', lEnd=lst&&lst.due?lst.due:'';
+  const lPeriod=lStart&&lEnd?fmtDate(lStart)+' ~ '+fmtDate(lEnd):'-';
+  return body
+    .replaceAll('{이름}',m.name)
+    .replaceAll('{단체명}',groupName(m.groupId)).replaceAll('{단체}',groupName(m.groupId))
+    .replaceAll('{상호}',S().studioName)
+    .replaceAll('{이용기간}',period)
+    .replaceAll('{시작일}',fmtDate(start)).replaceAll('{만료일}',fmtDate(end))
+    .replaceAll('{레슨기간}',lPeriod)
+    .replaceAll('{레슨시작일}',fmtDate(lStart)).replaceAll('{레슨만료일}',fmtDate(lEnd))
+    .replaceAll('{예정일}',st.due?fmtDate(st.due):'-')
+    .replaceAll('{레슨예정일}',lst&&lst.due?fmtDate(lst.due):'-')
+    .replaceAll('{회비}',fmtWon(m.fee)).replaceAll('{레슨비}',fmtWon(m.lessonFee))
+    .replaceAll('{총횟수}',String(m.lessonTotal||4)).replaceAll('{전화번호}',m.phone||'');
+}
+function getTargets(tpl){
+  if(!tpl)return{list:[],label:'대상'};
+  if(tpl.id==='t3')return{list:db.members.filter(m=>m.hasLesson&&lessonStatus(m).finished),label:'레슨 재등록 대상'};
+  if(tpl.id==='t4')return{list:db.members.filter(m=>{const s=lessonFeeStatus(m);return s&&s.code==='overdue';}),label:'레슨 등록기간 만료 대상 (미납)'};
+  if(tpl.id==='t5')return{list:db.members.filter(m=>m.hasLesson),label:'레슨 회원 전체'};
+  if(tpl.id==='t6')return{list:db.members.slice(),label:'전체 회원'};
+  return{list:db.members.filter(m=>feeStatus(m).code==='overdue'),label:'이용기간 만료 대상 (미납)'};
+}
+let notifyTarget={mode:'auto',groupId:'',memberId:''};
+function effTargets(tpl){
+  if(notifyTarget.mode==='all')return{list:db.members.slice(),label:'전체 회원'};
+  if(notifyTarget.mode==='group'){
+    const g=db.groups.find(g=>g.id===notifyTarget.groupId)||db.groups[0];
+    return{list:g?db.members.filter(m=>m.groupId===g.id):[],label:g?'['+g.name+'] 단체 회원':'단체 없음'};
+  }
+  if(notifyTarget.mode==='member'){
+    const m=db.members.find(x=>x.id===notifyTarget.memberId)||db.members[0];
+    return{list:m?[m]:[],label:m?m.name+'님 (개인)':'개인'};
+  }
+  return getTargets(tpl);
+}
+function rowBadge(tpl,m){
+  if(notifyTarget.mode!=='auto')return '<span class="badge b-brand">공지 대상</span>';
+  if(tpl.id==='t3'){const ls=lessonStatus(m);return ls?'<span class="badge b-bad">'+ls.done+'/'+ls.total+'회 완료</span>':'';}
+  if(tpl.id==='t4')return lbadge(lessonFeeStatus(m));
+  if(tpl.id==='t5'||tpl.id==='t6')return '<span class="badge b-brand">공지 대상</span>';
+  return badge(feeStatus(m));
+}
+function vNotify(){
+  if(!notifyTplId&&db.templates.length)notifyTplId=db.templates[0].id;
+  const tpl=db.templates.find(t=>t.id===notifyTplId)||db.templates[0];
+  const tg=effTargets(tpl);
+  const targets=tg.list, targetLabel=tg.label;
+  const sent=db.sentLogs.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,15);
+  return `<div class="pagehead"><div><h1>알림·공지</h1><div class="sub">카카오톡에 붙여넣을 문구를 자동 생성합니다 (직접 발송)</div></div></div>
+  <div class="card"><h2>발송 문구 템플릿</h2>
+    <div class="row"><select style="flex:1;min-width:150px" onchange="notifyTplId=this.value;tplEdit=null;render()">
+      ${db.templates.map(t=>`<option value="${t.id}" ${tpl&&tpl.id===t.id?'selected':''}>${esc(t.name)}</option>`).join('')}</select>
+      <button class="btn sm" onclick="editTemplate()">문구 수정</button>
+      <button class="btn sm" onclick="addTemplate()">새 템플릿</button>
+      <button class="btn sm danger" onclick="delTemplate()">삭제</button></div>
+    <div class="row mt">
+      <span class="muted" style="font-weight:700">보낼 대상:</span>
+      <select style="width:auto" onchange="notifyTarget.mode=this.value;render()">
+        <option value="auto" ${notifyTarget.mode==='auto'?'selected':''}>자동 (템플릿 기준)</option>
+        <option value="all" ${notifyTarget.mode==='all'?'selected':''}>전체 회원</option>
+        <option value="group" ${notifyTarget.mode==='group'?'selected':''}>단체별</option>
+        <option value="member" ${notifyTarget.mode==='member'?'selected':''}>개인별</option></select>
+      ${notifyTarget.mode==='group'?`<select style="width:auto" onchange="notifyTarget.groupId=this.value;render()">
+        ${db.groups.map(g=>`<option value="${g.id}" ${notifyTarget.groupId===g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select>`:''}
+      ${notifyTarget.mode==='member'?`<select style="width:auto" onchange="notifyTarget.memberId=this.value;render()">
+        ${db.members.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(m=>`<option value="${m.id}" ${notifyTarget.memberId===m.id?'selected':''}>${esc(m.name)} (${esc(groupName(m.groupId))})</option>`).join('')}</select>`:''}
+    </div>
+    ${tplEdit?`
+    <div class="mt" style="background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:14px">
+      <div class="field" style="margin-bottom:10px"><label>템플릿 이름</label>
+        <input id="tplName" value="${tplEdit.mode==='edit'?esc(tpl.name):''}" placeholder="예: 여름 특강 안내"></div>
+      <div class="field"><label>문구 내용 (전체를 보면서 자유롭게 수정하세요)</label>
+        <textarea id="tplBody" rows="12" style="min-height:240px;line-height:1.7;resize:vertical">${tplEdit.mode==='edit'?esc(tpl.body):'안녕하세요, {상호}입니다.\n\n'}</textarea></div>
+      <div class="muted mt">사용 가능 변수: {이름} {단체명} {상호} {이용기간} {시작일} {만료일} {레슨기간} {레슨시작일} {레슨만료일} {예정일} {레슨예정일} {회비} {레슨비} {총횟수} {전화번호}</div>
+      <div class="row mt">
+        <button class="btn primary" onclick="saveTemplateEdit()">💾 저장</button>
+        <button class="btn" onclick="tplEdit=null;render()">취소</button></div>
+    </div>`
+    :tpl?`<div class="copybox mt">${esc(tpl.body)}</div>
+    <div class="muted mt">사용 가능 변수: {이름} {단체명} {상호} {이용기간} {시작일} {만료일} {레슨기간} {레슨시작일} {레슨만료일} {예정일} {레슨예정일} {회비} {레슨비} {총횟수} {전화번호}</div>`:''}
+  </div>
+  <div class="card"><h2>📋 ${targetLabel} (${targets.length}명)
+    ${targets.length?`<span><button class="btn sm" onclick="copyAll()">전체 문구 복사</button>
+    <button class="btn sm primary" onclick="markSent()">발송 완료 기록</button></span>`:''}</h2>
+    ${targets.length?targets.map(m=>{const text=fillTemplate(tpl.body,m);
+      return `<div style="padding:12px 0;border-bottom:1px solid #f1f5f9">
+      <div class="row"><b>${esc(m.name)}</b><span class="muted">${esc(m.phone||'전화번호 없음')}</span>
+      ${rowBadge(tpl,m)}
+      <div class="spacer"></div>
+      <button class="btn sm" onclick="copyText(document.getElementById('msg-${m.id}').textContent,'${esc(m.name)}님 문구 복사됨')">📋 문구 복사</button></div>
+      <div class="copybox mt" id="msg-${m.id}">${esc(text)}</div></div>`;}).join('')
+    :'<div class="empty">현재 알림 대상자가 없습니다 👍</div>'}
+  </div>
+  <div class="card"><h2>발송 기록</h2>
+    ${sent.length?`<div class="tablewrap"><table><tr><th>날짜</th><th>이름</th><th>템플릿</th></tr>
+    ${sent.map(s=>`<tr><td>${fmtDate(s.date)}</td><td>${esc(s.name)}</td><td class="muted">${esc(s.template)}</td></tr>`).join('')}</table></div>`
+    :'<div class="empty">발송 기록이 없습니다</div>'}</div>`;
+}
+function copyAll(){
+  const tpl=db.templates.find(t=>t.id===notifyTplId);
+  const targets=effTargets(tpl).list;
+  const text=targets.map(m=>`▶ ${m.name} (${m.phone||'번호없음'})\n${fillTemplate(tpl.body,m)}`).join('\n\n────────────\n\n');
+  copyText(text,'전체 '+targets.length+'건 복사되었습니다');
+}
+function markSent(){
+  const tpl=db.templates.find(t=>t.id===notifyTplId);
+  const targets=effTargets(tpl).list;
+  if(!confirm(targets.length+'명에게 발송 완료로 기록할까요?'))return;
+  targets.forEach(m=>db.sentLogs.push({id:uid(),memberId:m.id,name:m.name,date:todayStr(),template:tpl.name,text:fillTemplate(tpl.body,m)}));
+  save();render();toast('발송 기록이 저장되었습니다');
+}
+let tplEdit=null; // null | {mode:'edit'|'new'}
+function editTemplate(){
+  if(!db.templates.find(t=>t.id===notifyTplId))return;
+  tplEdit={mode:'edit'};render();
+}
+function addTemplate(){tplEdit={mode:'new'};render();}
+function saveTemplateEdit(){
+  const name=document.getElementById('tplName').value.trim();
+  const body=document.getElementById('tplBody').value;
+  if(!name)return toast('템플릿 이름을 입력하세요');
+  if(!body.trim())return toast('문구 내용을 입력하세요');
+  if(tplEdit.mode==='edit'){
+    const tpl=db.templates.find(t=>t.id===notifyTplId);
+    tpl.name=name;tpl.body=body;
+  }else{
+    const t={id:uid(),name,body};db.templates.push(t);notifyTplId=t.id;
+  }
+  tplEdit=null;save();render();toast('템플릿이 저장되었습니다');
+}
+function delTemplate(){
+  if(db.templates.length<=1)return toast('최소 1개의 템플릿이 필요합니다');
+  const tpl=db.templates.find(t=>t.id===notifyTplId);
+  if(!confirm(`'${tpl.name}' 템플릿을 삭제할까요?`))return;
+  db.templates=db.templates.filter(t=>t.id!==notifyTplId);notifyTplId=db.templates[0].id;tplEdit=null;save();render();
+}
+
+/* ================= 금전출납부 ================= */
+let ledgerYear=todayStr().slice(0,4), ledgerMonth='';
+// 해당 연도 전체 항목: 회비·레슨비 납부(자동) + 직접 입력 내역
+function ledgerEntries(year){
+  const es=[];
+  db.payLogs.forEach(p=>{if(p.date.startsWith(year)){
+    const m=db.members.find(x=>x.id===p.memberId);
+    es.push({id:'auto_'+p.id,date:p.date,kind:'in',category:p.type==='lesson'?'레슨비':FL(),amount:p.amount||0,memo:m?m.name:'(삭제된 회원)',auto:true});}});
+  db.ledger.forEach(l=>{if(l.date.startsWith(year))es.push(l);});
+  return es.sort((a,b)=>b.date.localeCompare(a.date)||String(b.id).localeCompare(String(a.id)));
+}
+function vLedger(){
+  const years=[...new Set([todayStr().slice(0,4),...db.payLogs.map(p=>p.date.slice(0,4)),...db.ledger.map(l=>l.date.slice(0,4))])].sort().reverse();
+  const es=ledgerEntries(ledgerYear);
+  const monthly=[];let cum=0;
+  for(let i=1;i<=12;i++){
+    const mm=ledgerYear+'-'+pad(i);
+    const list=es.filter(e=>e.date.startsWith(mm));
+    const inc=list.filter(e=>e.kind==='in').reduce((s,e)=>s+e.amount,0);
+    const out=list.filter(e=>e.kind==='out').reduce((s,e)=>s+e.amount,0);
+    cum+=inc-out;
+    monthly.push({m:i,inc,out,bal:inc-out,cum});
+  }
+  const totIn=monthly.reduce((s,x)=>s+x.inc,0), totOut=monthly.reduce((s,x)=>s+x.out,0);
+  const shown=ledgerMonth?es.filter(e=>e.date.slice(5,7)===ledgerMonth):es;
+  const isJan=todayStr().slice(5,7)==='01';
+  const prevYear=String(Number(todayStr().slice(0,4))-1);
+  return `<div class="pagehead"><div><h1>금전출납부</h1><div class="sub">${FL()}·레슨비 납부는 자동으로 수입에 반영됩니다</div></div>
+    <div class="row"><select style="width:auto" onchange="ledgerYear=this.value;ledgerMonth='';render()">
+      ${years.map(y=>`<option ${ledgerYear===y?'selected':''}>${y}</option>`).join('')}</select><span class="muted">년</span>
+      <button class="btn sm" onclick="exportLedgerCSV()">📊 엑셀 내보내기</button></div></div>
+  ${isJan&&years.includes(prevYear)&&ledgerYear!==prevYear?`<div class="card" style="background:var(--brand-soft);border-color:#bfdbfe">🎉 새해가 시작되었습니다. 전년도(${prevYear}년) 수입지출 총괄은 위 연도 선택에서 확인하세요. 올해 출납부는 새로 시작됩니다.</div>`:''}
+  <div class="card"><h2>💰 ${ledgerYear}년 현황</h2>
+    <div class="detailgrid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="item"><div class="k">총수입</div><div class="v" style="color:var(--ok)">${fmtWon(totIn)}원</div></div>
+      <div class="item"><div class="k">총지출</div><div class="v" style="color:var(--bad)">${fmtWon(totOut)}원</div></div>
+      <div class="item"><div class="k">수지</div><div class="v">${fmtWon(totIn-totOut)}원</div></div>
+    </div></div>
+  <div class="card mt"><h2>기록 추가</h2>
+    <div class="row">
+      <input type="date" id="lgDate" value="${todayStr()}" style="width:auto">
+      <select id="lgKind" style="width:auto" onchange="document.getElementById('lgCatIn').style.display=this.value==='in'?'':'none';document.getElementById('lgCatOut').style.display=this.value==='out'?'':'none'">
+        <option value="in">수입</option><option value="out">지출</option></select>
+      <select id="lgCatIn" style="width:auto">${db.cats.income.map(c=>`<option>${esc(c)}</option>`).join('')}</select>
+      <select id="lgCatOut" style="width:auto;display:none">${db.cats.expense.map(c=>`<option>${esc(c)}</option>`).join('')}</select>
+      <input type="number" id="lgAmount" placeholder="금액" inputmode="numeric" style="width:120px;flex:none">
+      <input id="lgMemo" placeholder="메모 (선택)" style="flex:1;min-width:100px">
+      <button class="btn primary sm" onclick="addLedger()">추가</button></div>
+    <div class="muted mt">항목 관리:
+      수입 [${db.cats.income.map(c=>`${esc(c)} <a href="#" onclick="delCat('income','${esc(c)}');return false" style="color:var(--bad);text-decoration:none">×</a>`).join(' · ')}]
+      <button class="btn sm ghost" onclick="addCat('income')">+수입항목</button><br>
+      지출 [${db.cats.expense.map(c=>`${esc(c)} <a href="#" onclick="delCat('expense','${esc(c)}');return false" style="color:var(--bad);text-decoration:none">×</a>`).join(' · ')}]
+      <button class="btn sm ghost" onclick="addCat('expense')">+지출항목</button></div>
+  </div>
+  <div class="card"><h2>📊 ${ledgerYear}년 월별 수입지출 총괄표 <span class="muted" style="font-weight:400">월을 누르면 상세 내역이 보입니다</span></h2>
+    <div class="tablewrap"><table><tr><th>월</th><th>수입</th><th>지출</th><th>잔액</th></tr>
+    ${monthly.map(x=>`<tr class="click" style="${ledgerMonth===pad(x.m)?'background:var(--brand-soft)':''}" onclick="ledgerMonth=ledgerMonth==='${pad(x.m)}'?'':'${pad(x.m)}';render()">
+      <td><b>${x.m}월</b></td><td style="color:var(--ok)">${fmtWon(x.inc)}원</td><td style="color:var(--bad)">${fmtWon(x.out)}원</td>
+      <td><b>${fmtWon(x.bal)}원</b></td></tr>`).join('')}
+    <tr style="background:#f8fafc"><td><b>합계</b></td><td style="color:var(--ok)"><b>${fmtWon(totIn)}원</b></td>
+      <td style="color:var(--bad)"><b>${fmtWon(totOut)}원</b></td><td><b>${fmtWon(totIn-totOut)}원</b></td></tr></table></div></div>
+  <div class="card"><h2>상세 내역 ${ledgerMonth?ledgerYear+'년 '+Number(ledgerMonth)+'월 <button class="btn sm ghost" onclick="ledgerMonth=\'\';render()">전체 보기</button>':'('+ledgerYear+'년 전체)'}</h2>
+    ${shown.length?`<div class="tablewrap"><table><tr><th>날짜</th><th>구분</th><th>항목</th><th>금액</th><th>메모</th><th></th></tr>
+    ${shown.map(e=>`<tr><td>${fmtDate(e.date)}</td>
+      <td><span class="badge ${e.kind==='in'?'b-ok':'b-bad'}">${e.kind==='in'?'수입':'지출'}</span></td>
+      <td>${esc(e.category)}${e.auto?' <span class="badge b-gray">자동</span>':''}</td>
+      <td><b>${fmtWon(e.amount)}원</b></td><td class="muted">${esc(e.memo||'')}</td>
+      <td style="text-align:right">${e.auto?'':`<button class="btn sm danger" onclick="delLedger('${e.id}')">삭제</button>`}</td></tr>`).join('')}</table></div>`
+    :'<div class="empty">내역이 없습니다</div>'}
+    <div class="muted mt">※ '자동' 표시는 ${FL()}·레슨비 납부 처리에서 자동 반영된 내역입니다. 수정·삭제는 해당 회원 상세에서 하세요.</div></div>`;
+}
+function addLedger(){
+  const date=document.getElementById('lgDate').value;
+  const kind=document.getElementById('lgKind').value;
+  const category=document.getElementById(kind==='in'?'lgCatIn':'lgCatOut').value;
+  const amount=Number(document.getElementById('lgAmount').value);
+  const memo=document.getElementById('lgMemo').value.trim();
+  if(!date)return toast('날짜를 선택하세요');
+  if(!amount||amount<=0)return toast('금액을 입력하세요');
+  db.ledger.push({id:uid(),date,kind,category,amount,memo});
+  ledgerYear=date.slice(0,4);
+  save();render();toast((kind==='in'?'수입':'지출')+' '+fmtWon(amount)+'원 기록됨');
+}
+function delLedger(id){
+  if(!confirm('이 기록을 삭제할까요?'))return;
+  db.ledger=db.ledger.filter(l=>l.id!==id);save();render();
+}
+function addCat(kind){
+  const name=prompt(kind==='income'?'새 수입 항목 이름':'새 지출 항목 이름');
+  if(!name||!name.trim())return;
+  const list=kind==='income'?db.cats.income:db.cats.expense;
+  if(list.includes(name.trim()))return toast('이미 있는 항목입니다');
+  list.push(name.trim());save();render();
+}
+function delCat(kind,name){
+  if(!confirm(`'${name}' 항목을 삭제할까요? (기존 기록은 유지됩니다)`))return;
+  if(kind==='income')db.cats.income=db.cats.income.filter(c=>c!==name);
+  else db.cats.expense=db.cats.expense.filter(c=>c!==name);
+  save();render();
+}
+function exportLedgerCSV(){
+  const es=ledgerEntries(ledgerYear).slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const rows=[['날짜','구분','항목','금액','메모']];
+  es.forEach(e=>rows.push([e.date,e.kind==='in'?'수입':'지출',e.category,e.amount,e.memo||'']));
+  const csv='﻿'+rows.map(r=>r.map(c=>'"'+String(c??'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='금전출납부_'+ledgerYear+'.csv';a.click();
+  toast(ledgerYear+'년 출납부 CSV가 다운로드됩니다');
+}
+
+/* ================= 설정 ================= */
+const ICONS=['🎷','🎹','🎤','🥁','🎸','🎻','🎺','🪗','🎵','🎶'];
+function vSettings(){
+  const s=S();
+  return `<div class="pagehead"><div><h1>설정</h1><div class="sub">내 교실에 맞게 앱을 바꿔 보세요</div></div></div>
+  <div class="card"><h2>기본 정보</h2>
+    <div class="formgrid g2">
+      <div class="field"><label>상호명 (교실·연습실 이름)</label><input id="setName" value="${esc(s.studioName)}" placeholder="예: 행복 노래교실"></div>
+      <div class="field"><label>대표 아이콘</label><select id="setIcon">${ICONS.map(i=>`<option ${s.icon===i?'selected':''}>${i}</option>`).join('')}</select></div>
+      <div class="field"><label>${'회비 명칭'}</label><select id="setFeeLabel">${['회비','수강료','이용료','월회비'].map(l=>`<option ${s.feeLabel===l?'selected':''}>${l}</option>`).join('')}</select></div>
+      <div class="field"><label>기본 레슨 횟수 (결제 1회당)</label><input id="setLessonTotal" type="number" min="1" value="${s.lessonTotal||4}"></div>
+    </div>
+    <button class="btn primary mt" onclick="saveSettings()">설정 저장</button></div>
+  <div class="card"><h2>제공자 표시 (하단 홍보 문구)</h2>
+    <div class="formgrid g2">
+      <div class="field"><label>제공자 이름</label><input id="setOwner" value="${esc(s.ownerName)}" placeholder="studio MUSE"></div>
+      <div class="field"><label>연락처·카톡채널 (선택)</label><input id="setContact" value="${esc(s.ownerContact)}" placeholder="예: 010-0000-0000 / pf.kakao.com/..."></div>
+    </div>
+    <button class="btn primary mt" onclick="saveSettings()">저장</button></div>
+  <div class="card"><h2>계정</h2>
+    <div class="row"><span class="muted">로그인 계정: <b>${esc(window.fbUserEmail||'')}</b></span>
+    <button class="btn sm danger" onclick="window.fbLogout&&window.fbLogout()">로그아웃</button></div>
+    <div class="muted mt">비밀번호 변경은 로그아웃 후 로그인 화면의 '비밀번호를 잊으셨나요?'를 이용하세요.</div></div>
+  <div class="card"><h2>데이터 관리</h2>
+    <div class="row">
+      <button class="btn" onclick="exportData()">⬇️ 전체 백업 (JSON)</button>
+      <button class="btn" onclick="document.getElementById('importFile').click()">⬆️ 백업 복원</button>
+      <button class="btn" onclick="exportCSV()">📊 회원명단 엑셀(CSV) 내보내기</button></div>
+    <div class="muted mt">마지막 백업: ${s.lastBackup?fmtDate(s.lastBackup):'없음'} · 주 1회 백업을 권장합니다. 기기를 바꿀 때는 백업 → 새 기기에서 복원하세요.</div></div>
+  <div class="card"><h2>개인정보 안내</h2>
+    <div class="muted" style="line-height:1.7">이 앱에 입력한 회원 정보(이름, 전화번호, 생년월일 등)는 <b>본인 계정의 클라우드 저장소(Google Firebase)</b>에 저장되며, 계정 소유자 본인만 접근할 수 있습니다.
+    데이터 보호와 백업은 사용자 책임이며, 회원 정보는 관련 법령(개인정보보호법)에 따라 회원 동의 하에 수집·관리하시기 바랍니다.</div></div>`;
+}
+function saveSettings(){
+  S().studioName=document.getElementById('setName').value.trim()||'내 교실';
+  S().icon=document.getElementById('setIcon').value;
+  S().feeLabel=document.getElementById('setFeeLabel').value;
+  S().lessonTotal=Number(document.getElementById('setLessonTotal').value)||4;
+  S().ownerName=document.getElementById('setOwner').value.trim()||'studio MUSE';
+  S().ownerContact=document.getElementById('setContact').value.trim();
+  save();render();toast('설정이 저장되었습니다');
+}
+function changePin(){
+  const v=document.getElementById('setPin').value.trim();
+  if(v.length<4)return toast('숫자 4자리 이상 입력하세요');
+  S().pin=v;save();toast('비밀번호가 변경되었습니다');
+  document.getElementById('setPin').value='';
+}
+
+/* ================= 백업/복원 ================= */
+function exportData(){
+  S().lastBackup=todayStr();save();
+  const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='회원관리_백업_'+todayStr()+'.json';a.click();
+  toast('백업 파일이 다운로드됩니다');render();
+}
+function exportCSV(){
+  const rows=[['이름','단체','등록일','생년월일','성별','락카','전화번호',FL(),'납부주기(개월)','최근납부일','다음예정일','상태','레슨','레슨요일','레슨시간','레슨비','레슨시작일','진행회차','총회차']];
+  db.members.forEach(m=>{const st=feeStatus(m);
+    rows.push([m.name,groupName(m.groupId),m.regDate,m.birth,m.gender,m.locker,m.phone,
+      m.manageFee===false?'':m.fee,m.feeCycle||1,m.feePayDate,st.due||'',st.label,
+      m.hasLesson?'Y':'',(m.lessonDays||[]).join('·'),m.lessonTime,m.hasLesson?m.lessonFee:'',m.lessonPayDate,m.lessonDone||0,m.lessonTotal||4]);});
+  const csv='﻿'+rows.map(r=>r.map(c=>'"'+String(c??'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='회원명단_'+todayStr()+'.csv';a.click();
+  toast('엑셀용 CSV 파일이 다운로드됩니다');
+}
+document.getElementById('importFile').addEventListener('change',function(){
+  const f=this.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{try{
+    const d=JSON.parse(r.result);
+    if(!d.members)throw 0;
+    if(!confirm('현재 데이터를 백업 파일로 교체할까요?'))return;
+    db=d;save();render();toast('복원되었습니다');
+  }catch(e){toast('올바른 백업 파일이 아닙니다');}};
+  r.readAsText(f);this.value='';
+});
+
+/* ================= 샘플 데이터 ================= */
+function seedDemo(){
+  if(db.members.length&&!confirm('샘플 데이터를 추가할까요?'))return;
+  const g1={id:uid(),name:'뮤즈색소폰',memo:''},g2={id:uid(),name:'일반 연습회원',memo:''};
+  db.groups.push(g1,g2);
+  const t=todayStr();
+  const mk=(name,g,gen,locker,phone,fee,payOffsetDays,lesson)=>{
+    const d=new Date();d.setDate(d.getDate()-payOffsetDays);
+    const m={id:uid(),groupId:g.id,name,regDate:addMonths(t,-3),birth:'1968-05-12',gender:gen,locker,phone,
+      fee,feePayDate:iso(d),hasLesson:!!lesson,
+      lessonDays:lesson?lesson.days:[],lessonTime:lesson?lesson.time:'',lessonFee:lesson?lesson.fee:0,
+      lessonPayDate:lesson?iso(d):'',lessonTotal:lesson?4:4,lessonDone:lesson?lesson.done:0};
+    db.members.push(m);
+    db.payLogs.push({id:uid(),memberId:m.id,date:m.feePayDate,amount:fee,type:'fee',memo:'샘플'});
+    return m;};
+  mk('김철수',g1,'남','A-01','010-1234-5678',50000,10,{days:['화','금'],time:'19:00',fee:120000,done:2});
+  mk('이영희',g1,'여','A-02','010-2345-6789',50000,40); // 미납
+  mk('박민수',g2,'남','B-05','010-3456-7890',40000,32); // 경과
+  mk('최수진',g2,'여','B-07','010-4567-8901',40000,5,{days:['수'],time:'15:00',fee:100000,done:4}); // 레슨 완료
+  save();render();toast('샘플 데이터를 추가했습니다');
+}
+
+/* ================= 렌더 ================= */
+function render(){
+  renderNav();
+  const el=document.getElementById('main');
+  if(view==='dashboard')el.innerHTML=vDashboard();
+  else if(view==='groups')el.innerHTML=vGroups();
+  else if(view==='members')el.innerHTML=vMembers();
+  else if(view==='register')el.innerHTML=vRegister(viewParam);
+  else if(view==='detail')el.innerHTML=vDetail(viewParam);
+  else if(view==='fees')el.innerHTML=vFees();
+  else if(view==='lessons')el.innerHTML=vLessons();
+  else if(view==='notify')el.innerHTML=vNotify();
+  else if(view==='ledger')el.innerHTML=vLedger();
+  else if(view==='settings')el.innerHTML=vSettings();
+}
+// 브라우저에 영구 저장 요청 (저장공간 부족 시 자동 삭제 방지)
+if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
+// 클라우드 연동 브릿지
+window.getDbJson=()=>JSON.stringify(db);
+window.applyCloudDb=(d)=>{db=d;migrateDb();save();render();};
+initLock();
+render();
+</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendPasswordResetEmail,signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { initializeFirestore,persistentLocalCache,doc,getDoc,setDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+const firebaseConfig={
+  apiKey:"AIzaSyBaSAZBrkbtqNBSYO8w2IYZami6iMAnEeY",
+  authDomain:"studiomuse-app.firebaseapp.com",
+  projectId:"studiomuse-app",
+  storageBucket:"studiomuse-app.firebasestorage.app",
+  messagingSenderId:"1098980343908",
+  appId:"1:1098980343908:web:7b5d8b26f1bb5ffb925f71"
+};
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const fsdb=initializeFirestore(app,{localCache:persistentLocalCache()});
+const msg=t=>{const el=document.getElementById('lockMsg');if(el)el.textContent=t;};
+const email=()=>document.getElementById('authEmail').value.trim();
+const pw=()=>document.getElementById('authPw').value;
+function errKo(e){
+  const c=(e&&e.code)||'';
+  if(c.includes('invalid-email'))return '이메일 형식이 올바르지 않습니다';
+  if(c.includes('missing-password')||c.includes('weak-password'))return '비밀번호는 6자 이상 입력하세요';
+  if(c.includes('email-already-in-use'))return '이미 가입된 이메일입니다. 로그인해 주세요';
+  if(c.includes('invalid-credential')||c.includes('wrong-password')||c.includes('user-not-found'))return '이메일 또는 비밀번호가 올바르지 않습니다';
+  if(c.includes('too-many-requests'))return '시도가 너무 많습니다. 잠시 후 다시 시도하세요';
+  if(c.includes('network'))return '인터넷 연결을 확인하세요';
+  if(c.includes('api-key'))return '설정 오류: API 키를 확인해야 합니다';
+  return '오류: '+c;
+}
+window.fbLogin=async()=>{try{msg('');await signInWithEmailAndPassword(auth,email(),pw());}catch(e){msg(errKo(e));}};
+window.fbSignup=async()=>{try{msg('');await createUserWithEmailAndPassword(auth,email(),pw());}catch(e){msg(errKo(e));}};
+window.fbReset=async()=>{try{if(!email())return msg('이메일을 먼저 입력하세요');await sendPasswordResetEmail(auth,email());msg('비밀번호 재설정 메일을 보냈습니다. 메일함을 확인하세요.');}catch(e){msg(errKo(e));}};
+window.fbLogout=()=>{if(!confirm('로그아웃할까요?'))return;localStorage.removeItem('saxadmin_v1');signOut(auth).then(()=>location.reload());};
+let saveTimer=null,uid=null;
+window.queueCloudSave=(json)=>{
+  if(!uid)return;
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{setDoc(doc(fsdb,'users',uid),{payload:json,updated:Date.now()}).catch(e=>console.warn('저장 실패',e));},800);
+};
+onAuthStateChanged(auth,async user=>{
+  const lock=document.getElementById('lockScreen');
+  if(!user){uid=null;window.fbUserEmail='';lock.style.display='flex';return;}
+  uid=user.uid;window.fbUserEmail=user.email||'';
+  try{
+    const snap=await getDoc(doc(fsdb,'users',uid));
+    if(snap.exists()&&snap.data().payload){
+      window.applyCloudDb(JSON.parse(snap.data().payload));
+    }else{
+      await setDoc(doc(fsdb,'users',uid),{payload:window.getDbJson(),updated:Date.now()});
+    }
+  }catch(e){console.warn('클라우드 불러오기 실패',e);}
+  lock.style.display='none';
+});
+if('serviceWorker' in navigator && location.protocol==='https:'){navigator.serviceWorker.register('sw.js');}
+</script>
+</body>
+</html>
