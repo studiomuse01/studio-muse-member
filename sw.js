@@ -1,10 +1,13 @@
-// 오프라인 지원 서비스 워커
-const CACHE='saxadmin-v1';
-const FILES=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
-self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)));self.skipWaiting();});
-self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim();});
+const CACHE='muse-v1';
+self.addEventListener('install',e=>{self.skipWaiting();});
+self.addEventListener('activate',e=>{e.waitUntil(self.clients.claim());});
 self.addEventListener('fetch',e=>{
-  e.respondWith(fetch(e.request).then(r=>{
-    const cp=r.clone();caches.open(CACHE).then(c=>c.put(e.request,cp));return r;
-  }).catch(()=>caches.match(e.request)));
+  if(e.request.method!=='GET')return;
+  e.respondWith(
+    fetch(e.request).then(r=>{
+      const cp=r.clone();
+      caches.open(CACHE).then(c=>c.put(e.request,cp)).catch(()=>{});
+      return r;
+    }).catch(()=>caches.match(e.request))
+  );
 });
