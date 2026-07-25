@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#4338ca">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="내 현황">
+<title>내 현황 · studio MUSE</title>
+<style>
+:root{--brand:#4338ca;--brand-soft:#eef2ff;--ok:#059669;--warn:#d97706;--bad:#dc2626;--ink:#1f2937;--line:#e5e7eb;--muted:#6b7280}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;background:#f0f4ff;color:var(--ink);font-size:16px}
+.top{background:linear-gradient(135deg,#4338ca,#6d28d9);color:#fff;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 14px;font-weight:800;font-size:19px}
+.top small{display:block;font-weight:400;font-size:12.5px;color:#c7d2fe;margin-top:2px}
+.wrap{max-width:560px;margin:0 auto;padding:12px 12px 40px}
+.card{background:#fff;border-radius:14px;padding:14px;margin-top:10px;box-shadow:0 2px 8px rgba(49,46,129,.08)}
+.card h2{font-size:16px;margin-bottom:8px;color:var(--brand)}
+.row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f1f3fa;gap:8px}
+.row:last-child{border-bottom:none}
+.k{color:#374151;font-weight:600;font-size:15px}
+.v{font-weight:800;font-size:15px;text-align:right}
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:13px;font-weight:800}
+.b-ok{background:#d1fae5;color:#065f46}.b-warn{background:#fef3c7;color:#92400e}.b-bad{background:#fee2e2;color:#991b1b}.b-gray{background:#f3f4f6;color:#4b5563}
+.big{font-size:22px;font-weight:900;color:var(--brand)}
+.empty{text-align:center;color:var(--muted);padding:30px 10px;line-height:1.7}
+.btn{display:block;width:100%;text-align:center;background:var(--brand);color:#fff;border:none;border-radius:12px;padding:13px;font-size:16px;font-weight:800;margin-top:14px;cursor:pointer}
+.note{text-align:center;color:var(--muted);font-size:12.5px;margin-top:12px;line-height:1.7}
+.slot{background:var(--brand-soft);border-radius:8px;padding:6px 10px;margin:3px 0;font-weight:700;font-size:14.5px;display:flex;justify-content:space-between}
+</style>
+</head>
+<body>
+<div class="top">🎷 내 현황 <small id="studioName">studio MUSE</small></div>
+<div class="wrap" id="app"><div class="empty">불러오는 중입니다...</div></div>
+<script>
+const API_KEY='AIzaSyBaSAZBrkbtqNBSYO8w2IYZami6iMAnEeY';
+const PROJECT='studiomuse-app';
+const q=new URLSearchParams(location.search);
+const code=q.get('c');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const DAY_ORDER=['월','화','수','목','금','토','일'];
+function fmtD(ds){if(!ds)return '-';const p=String(ds).split('-');if(p.length<3)return ds;return Number(p[1])+'월 '+Number(p[2])+'일';}
+function feeBadge(label){
+  if(!label)return '';
+  if(label==='정상'||label==='완납'||label==='진행중')return '<span class="badge b-ok">'+esc(label)+'</span>';
+  if(label.includes('미납')||label.includes('만료'))return '<span class="badge b-bad">'+esc(label)+'</span>';
+  if(label.includes('경과')||label.includes('예정'))return '<span class="badge b-warn">'+esc(label)+'</span>';
+  return '<span class="badge b-gray">'+esc(label)+'</span>';
+}
+function render(st){
+  document.getElementById('studioName').textContent=st.studio||'studio MUSE';
+  const el=document.getElementById('app');
+  let h='<div class="card"><div style="display:flex;align-items:center;justify-content:space-between">'
+    +'<div><div class="big">'+esc(st.name)+' 님</div>'
+    +(st.group?'<div style="color:var(--muted);font-size:13.5px;margin-top:2px">'+esc(st.group)+'</div>':'')
+    +'</div><div style="font-size:34px">🎷</div></div>'
+    +(st.rest?'<div style="margin-top:8px"><span class="badge b-warn">휴회 중'+(st.restEnd?' · '+fmtD(st.restEnd)+'까지':'')+'</span></div>':'')
+    +'</div>';
+  if(st.fee){
+    h+='<div class="card"><h2>💰 회비</h2>'
+      +'<div class="row"><span class="k">다음 납부일</span><span class="v" style="color:var(--brand)">'+fmtD(st.fee.due)+'</span></div>'
+      +'<div class="row"><span class="k">납부 주기</span><span class="v">'+(st.fee.cycle||1)+'개월</span></div>'
+      +'<div class="row"><span class="k">상태</span><span class="v">'+feeBadge(st.fee.label)+'</span></div></div>';
+  }
+  if(st.lesson){
+    const L=st.lesson;
+    const remain=Math.max((L.total||4)-(L.done||0),0);
+    h+='<div class="card"><h2>🎵 레슨</h2>'
+      +'<div class="row"><span class="k">레슨 종류</span><span class="v">'+esc(L.type||'-')+(L.len?' ('+L.len+'분)':'')+'</span></div>'
+      +(L.teacher?'<div class="row"><span class="k">담당 강사</span><span class="v">'+esc(L.teacher)+'</span></div>':'')
+      +'<div class="row"><span class="k">내 레슨 시간표</span><span class="v">'+((L.days||[]).length?(L.days.map(d=>d+'요일').join(', ')+' '+(L.time||'')):'미배정')+'</span></div>'
+      +'<div class="row"><span class="k">진행 회차</span><span class="v" style="color:var(--ok)">'+(L.done||0)+' / '+(L.total||4)+'회 <span style="color:var(--muted);font-weight:600">(남은 '+remain+'회)</span></span></div>'
+      +(L.due?'<div class="row"><span class="k">레슨비 납부일<br><small style="font-weight:500;color:var(--muted)">'+(L.dueDone?'('+(L.total||4)+'회차 체크일)':'('+(L.total||4)+'회차 예정일 · 휴강 시 변동)')+'</small></span><span class="v" style="color:var(--brand)">'+fmtD(L.due)+'</span></div>':'')
+      +'</div>';
+  }
+  if(st.l2){
+    h+='<div class="card"><h2>➕ 추가 레슨</h2>'
+      +'<div class="row"><span class="k">종류</span><span class="v">'+esc(st.l2.type)+'</span></div>'
+      +(st.l2.teacher?'<div class="row"><span class="k">담당 강사</span><span class="v">'+esc(st.l2.teacher)+'</span></div>':'')
+      +'<div class="row"><span class="k">시간</span><span class="v">'+((st.l2.days||[]).length?(st.l2.days.join('·')+'요일 '+(st.l2.time||'')):'미배정')+'</span></div></div>';
+  }
+  if(st.ens){
+    h+='<div class="card"><h2>🎼 앙상블</h2>'
+      +'<div class="row"><span class="k">참여</span><span class="v"><span class="badge b-ok">참여 중'+(st.ens.exempt?' (면제)':'')+'</span></span></div>'
+      +((st.ens.times||[]).length?st.ens.times.map(t=>'<div class="slot"><span>연습 시간</span><span>'+esc(t.d)+'요일 '+esc(t.t)+' ('+(t.len||90)+'분)</span></div>').join(''):'')
+      +(!st.ens.exempt&&st.ens.due?'<div class="row"><span class="k">다음 납부</span><span class="v" style="color:var(--brand)">'+fmtD(st.ens.due)+'</span></div>':'')
+      +'</div>';
+  }
+  if(st.rooms&&st.rooms.length){
+    const sorted=st.rooms.slice().sort((a,b)=>DAY_ORDER.indexOf(a.d)-DAY_ORDER.indexOf(b.d)||a.s-b.s);
+    h+='<div class="card"><h2>🏠 내 연습실 시간'+(st.roomNm?' <span style="font-size:13px;color:var(--muted);font-weight:600">'+esc(st.roomNm)+'</span>':'')+'</h2>'
+      +sorted.map(r=>'<div class="slot"><span>'+esc(r.d)+'요일</span><span>'+String(r.s).padStart(2,'0')+':00 ~ '+String(r.e).padStart(2,'0')+':00</span></div>').join('')
+      +'</div>';
+  }
+  if(st._roomAll&&st._roomAll.slots&&st._roomAll.slots.length){
+    const all=st._roomAll.slots.slice().sort((a,b)=>DAY_ORDER.indexOf(a.d)-DAY_ORDER.indexOf(b.d)||a.s-b.s);
+    let cur='';let body='';
+    all.forEach(r=>{
+      if(r.d!==cur){cur=r.d;body+='<div style="font-weight:800;color:var(--brand);margin-top:8px">'+esc(r.d)+'요일</div>';}
+      const mine=r.n===st.name;
+      body+='<div class="slot" style="'+(mine?'background:#ddd6fe;border:1.5px solid var(--brand);':'')+'"><span>'+esc(r.n)+(mine?' (나)':'')+'</span><span>'+String(r.s).padStart(2,'0')+':00 ~ '+String(r.e).padStart(2,'0')+':00</span></div>';
+    });
+    h+='<div class="card"><h2>👥 단체 연습실 전체 현황 <span style="font-size:13px;color:var(--muted);font-weight:600">'+esc(st._roomAll.name||'')+'</span></h2>'+body
+      +'<div style="color:var(--muted);font-size:12.5px;margin-top:6px">비어있는 시간에 연습실 사용을 원하시면 관리자에게 문의하세요.</div></div>';
+  }
+  h+='<button class="btn" onclick="load()">🔄 새로고침</button>';
+  h+='<div class="note">이 화면은 본인 현황 조회 전용입니다.<br>문의는 '+esc(st.studio||'studio MUSE')+'로 연락해 주세요.<br>사파리·크롬의 공유 → "홈 화면에 추가"를 하면 앱처럼 쓸 수 있습니다.</div>';
+  el.innerHTML=h;
+}
+async function load(){
+  const el=document.getElementById('app');
+  if(q.get('demo')){
+    render({name:'홍길동',group:'송파',studio:'studio MUSE',fee:{due:'2026-08-04',label:'정상',cycle:1},
+      lesson:{type:'레슨1',len:30,teacher:'변상연',days:['월'],time:'14:00',done:4,total:4,due:'2026-08-10',dueDone:true},
+      ens:{due:'2026-08-01',exempt:false,times:[{d:'금',t:'18:00',len:90}]},rooms:[{d:'수',s:10,e:12}],roomNm:'본원 드럼',
+      _roomAll:{name:'본원 드럼',slots:[{d:'월',s:9,e:10,n:'김드럼'},{d:'수',s:10,e:12,n:'홍길동'},{d:'수',s:14,e:15,n:'이연습'},{d:'금',s:18,e:19,n:'박연습'}]}});
+    return;
+  }
+  if(!code){el.innerHTML='<div class="empty">주소가 올바르지 않습니다.<br>관리자에게 받은 링크로 접속해 주세요.</div>';return;}
+  el.innerHTML='<div class="empty">불러오는 중입니다...</div>';
+  try{
+    const get1=async c=>{
+      const r=await fetch('https://firestore.googleapis.com/v1/projects/'+PROJECT+'/databases/(default)/documents/mstat/'+encodeURIComponent(c)+'?key='+API_KEY);
+      if(!r.ok)return null;
+      const d=await r.json();
+      const j=d&&d.fields&&d.fields.j&&d.fields.j.stringValue;
+      return j?JSON.parse(j):null;
+    };
+    const st=await get1(code);
+    if(!st)throw new Error('empty');
+    if(st.roomCode){try{st._roomAll=await get1(st.roomCode);}catch(e){}}
+    render(st);
+  }catch(e){
+    el.innerHTML='<div class="empty">현황을 불러오지 못했습니다.<br>잠시 후 아래 버튼으로 다시 시도하거나,<br>관리자에게 문의해 주세요.</div><button class="btn" onclick="load()">🔄 다시 시도</button>';
+  }
+}
+load();
+</script>
+</body>
+</html>
