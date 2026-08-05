@@ -120,7 +120,7 @@ label{font-size:13px;color:var(--sub);display:block;margin-bottom:4px;font-weigh
 table{width:100%;border-collapse:collapse;font-size:16px;font-weight:700}
 td{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:380px){table{font-size:15px}td{padding:9px 6px}}
-th{text-align:left;color:var(--sub);font-size:12px;font-weight:700;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{text-align:left;color:var(--sub);font-size:12px;font-weight:700;padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
 td{padding:10px 8px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
 tr.click{cursor:pointer}
 tr.click:hover td{background:#f8fafc}
@@ -731,7 +731,7 @@ function vDashTeacher(){
   <div class="card" style="padding:10px"><h2 style="font-size:17px;margin-bottom:6px">📈 수강생 레슨 진행 현황</h2>
     <div class="row" style="gap:8px;flex-wrap:wrap">
     ${lessonMs.slice(0,12).map(m=>{const t=m.lessonTotal||4,d0=Math.min(m.lessonDone||0,t),pc=Math.round(d0/t*100);
-      return `<div style="flex:1;min-width:120px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;cursor:pointer" onclick="go('detail','${m.id}')">
+      return `<div style="flex:1;min-width:120px;border:1px solid var(--line);border-radius:10px;padding:7px 10px;cursor:pointer" onclick="go('detail','${m.id}')">
       <div class="row" style="align-items:baseline"><b style="font-size:15px;flex:1">${esc(m.name)}</b><span style="font-size:13px;font-weight:700">${d0} / ${t}회</span></div>
       <div style="background:#e5e7eb;border-radius:4px;height:7px;margin-top:5px"><div style="width:${pc}%;height:7px;border-radius:4px;background:${pc>=100?'#16a34a':'#4f46e5'}"></div></div>
       <div style="text-align:right;font-size:11.5px;color:var(--muted)">${pc}%</div></div>`;}).join('')||'<div class="empty">레슨 수강생이 없습니다</div>'}
@@ -799,7 +799,7 @@ function vDashboard(){
     todos.push({dot:'🔵',p:3,ov:0,name:m.name,text:'이번 달 레슨 0회 — 말일 안내',noti:`recSms0('${m.id}')`});
   });
   todos.sort((a,b)=>a.p-b.p||b.ov-a.ov); // 오래된 것·중요한 것부터
-  const it=(k,v,color,act)=>`<div class="item" style="cursor:pointer;padding:8px 10px" onclick="${act}"><div class="k" style="font-size:15px;font-weight:700">${k}</div><div class="v" style="font-size:20px;font-weight:800;color:${color}">${v}</div></div>`;
+  const it=(k,v,color,act)=>`<div class="item" style="cursor:pointer;padding:7px 10px" onclick="${act}"><div class="k" style="font-size:15px;font-weight:700">${k}</div><div class="v" style="font-size:20px;font-weight:800;color:${color}">${v}</div></div>`;
   const qb=(ico,l,act)=>`<button class="btn" style="flex:1;min-width:0;justify-content:center;font-size:15px;font-weight:800;padding:13px 2px;white-space:nowrap" onclick="${act}"><span>${ico}<br>${l}</span></button>`;
   const heroName=SM()?esc(S().studioName):'원장님';
   return `
@@ -871,7 +871,7 @@ function vDashboard(){
       ?`<div style="text-align:center;font-size:15px;font-weight:600;color:var(--brand);padding-top:6px;cursor:pointer" onclick="dashActOpen=false;render()">접기 ▲</div>`
       :`<div style="text-align:center;font-size:15px;font-weight:600;color:var(--brand);padding-top:6px;cursor:pointer" onclick="dashActOpen=true;render()">전체보기 ›</div>`):'');})()}
   </div>
-  <div class="card" style="padding:8px 10px"><div class="row" style="align-items:center;flex-wrap:nowrap;gap:5px"><b style="flex:none;font-size:14px">💾 데이터 관리</b><div class="spacer"></div>
+  <div class="card" style="padding:7px 10px"><div class="row" style="align-items:center;flex-wrap:nowrap;gap:5px"><b style="flex:none;font-size:14px">💾 데이터 관리</b><div class="spacer"></div>
     <button class="btn sm primary" style="padding:7px 9px;font-size:13px;min-height:0;flex:none" onclick="appUpdate()">최신 버전</button>
     <button class="btn sm" style="padding:7px 9px;font-size:13px;min-height:0;flex:none" onclick="exportData()">백업하기</button>
     <button class="btn sm" style="padding:7px 9px;font-size:13px;min-height:0;flex:none" onclick="document.getElementById('importFile').click()">불러오기</button></div></div>
@@ -1269,7 +1269,7 @@ function vRegisterForm(editId){
       ${roleLocked?`<span class="badge b-brand" style="font-size:14px">${esc(cur)}</span><span class="muted" style="font-size:13px">설정 > 기본정보에서 관리 · 강사 겸직 가능 — 수강생의 담당강사 칸에 이름을 입력하면 레슨 정산에 집계됩니다</span><input type="hidden" name="role" value="${esc(cur)}">`
       :['일반회원','강사'].concat(PRO()?['게스트']:[]).map(t=>`<label class="opt"><input type="radio" name="role" value="${t}" ${role0===t?'checked':''} onchange="regSections()"><span>${t}</span></label>`).join('')+`
       <label class="opt"><input type="radio" name="role" value="__custom" onchange="regSections();var i=document.getElementById('roleCustomIn');if(i){i.style.display='';i.focus();}"><span>기타</span></label>
-      <input id="roleCustomIn" name="roleCustom" placeholder="직접입력" style="display:none;width:90px;flex:none;padding:8px 6px">`}
+      <input id="roleCustomIn" name="roleCustom" placeholder="직접입력" style="display:none;width:90px;flex:none;padding:7px 6px">`}
     </div>
     ${roleLocked?'':'<div class="muted" style="font-size:12.5px;margin-top:2px">관리자·총무는 [설정 > 기본정보]에서 입력하면 자동 등록됩니다</div>'}
     <div class="row" style="gap:6px;margin-top:10px;flex-wrap:nowrap">
@@ -1324,8 +1324,8 @@ function vRegisterForm(editId){
       ${PRO()?`<label class="switch" style="margin:0"><input type="checkbox" name="groupLesson" ${m&&m.groupLesson?'checked':''} onchange="var ge=document.getElementById('geWrap');if(ge)ge.style.display=this.checked?'':'none';updateCalc()"> 🎼 앙상블 (${fmtWon(priceOf('단체레슨')||70000)}·매월)</label>
       <label class="switch" id="geWrap" style="margin:0;display:${m&&m.groupLesson?'':'none'}"><input type="checkbox" name="groupExempt" ${m&&m.groupLesson&&(m.groupLessonFee||0)===0?'checked':''} onchange="updateCalc()"> 🆓 면제</label>`:''}
       <div class="spacer"></div>
-      <div style="flex:none;width:80px"><label>총횟수</label><input type="number" name="lessonTotal" style="padding:8px 6px" value="${m?m.lessonTotal||4:(S().lessonTotal||4)}" min="1"></div>
-      <div style="flex:none;width:80px"><label>진행회차</label><input type="number" name="lessonDone" style="padding:8px 6px" value="${m?m.lessonDone||0:0}" min="0"></div>
+      <div style="flex:none;width:80px"><label>총횟수</label><input type="number" name="lessonTotal" style="padding:7px 6px" value="${m?m.lessonTotal||4:(S().lessonTotal||4)}" min="1"></div>
+      <div style="flex:none;width:80px"><label>진행회차</label><input type="number" name="lessonDone" style="padding:7px 6px" value="${m?m.lessonDone||0:0}" min="0"></div>
     </div>
     <div class="muted" style="margin-top:4px;font-size:13px">레슨 요일·시간은 [레슨 > 주간 레슨표]에서 빈칸을 눌러 배정하고, 이동·삭제도 그곳에서 합니다.</div>
     </div>
@@ -1494,6 +1494,7 @@ function rwInit(id){
     fee:m?(m.fee||''):(priceOf('일반회원1')||100000),cyc:(m&&m.feeCycle)||1,feeStart:m?(m.feePayDate||''):todayStr(),
     lockerOn:!!(m&&(m.useLocker||m.locker)),lockerNo:(m&&m.locker)||'',roomNo:(m&&m.roomNo)||'',
     prepay:(m&&m.prepayM)||0,prepayC:false,
+    ensOn:!!(m&&m.groupLesson),ensFee:m?(m.groupLessonFee!=null?m.groupLessonFee:''):(priceOf('단체레슨')||70000),
     lform:(m&&m.lessonForm)||'개인',lfee:(m&&m.lessonFee)||'',lstart:(m&&m.lessonPayDate)||todayStr(),collect:(m&&m.collectType)||'강사',
     ls:[]}};
   if(m&&m.hasLesson&&m.lessonType)rw.d.ls.push({type:m.lessonType,tc:m.teacher||'',pl:m.lessonPlace||'',st:m.lessonStart||'',per:m.lessonPerMonth||m.lessonTotal||4,mon:m.lessonMonths||1,fee:m.lessonFee||'',day:(m.lessonDays||[])[0]||'',tm:m.lessonTime||''});
@@ -1504,7 +1505,7 @@ function rwRead(){
   if(!rw)return;
   const v=(i,k)=>{const e=document.getElementById(i);if(e!=null&&e.value!=null)rw.d[k]=e.value;};
   v('rw1_g1','g1');v('rw1_g2','g2');v('rw1_name','name');v('rw1_phone','phone');v('rw1_reg','reg');v('rw1_etc','etc');
-  v('rw2_fee','fee');v('rw2_cyc','cyc');v('rw2_fs','feeStart');v('rw2_lno','lockerNo');v('rw2_room','roomNo');v('rw2_prec','prepay');
+  v('rw2_fee','fee');v('rw2_cyc','cyc');v('rw2_fs','feeStart');v('rw2_lno','lockerNo');v('rw2_room','roomNo');v('rw2_prec','prepay');v('rw2_ens','ensFee');
   v('rw2_lfee','lfee');v('rw2_ls','lstart');
   rw.d.ls.forEach((c,i)=>{
     const g=id=>{const e=document.getElementById(id+'_'+i);return e?e.value:null;};
@@ -1546,6 +1547,8 @@ function rwCommit(){
     m.useLocker=!!d.lockerOn;m.locker=d.lockerOn?(d.lockerNo||''):'';
     if(d.kRoom)m.roomNo=(d.roomNo||'').trim(); // 개인실 유형이 아닐 때는 기존 개인실 번호 유지
     m.prepayM=Number(d.prepay)||0;
+    if(!!m.groupLesson!==!!d.ensOn)m.groupLesson=!!d.ensOn; // 앙상블 참여 토글
+    if(d.ensOn){m.groupLessonFee=Number(d.ensFee)||0;if(!m.groupPayDate)m.groupPayDate=todayStr();}
   }
   if(d.st==='이용중'){m.restDate=null;m.restEnd=null;}
   const L=d.ls.filter(x=>x.type);
@@ -1580,7 +1583,7 @@ function rwCommit(){
 }
 function rwSaveClose(){rwRead();const m=rwCommit();if(m===null&&rw)return;if(m){toast(m.name+'님 저장 완료');const id=m.id;rw=null;go('detail',id);}}
 function rwFinish(){rwRead();const m=rwCommit();if(m===null&&rw)return;if(m){toast('🎉 '+m.name+'님 회원등록 완료');const id=m.id;rw=null;go('detail',id);}}
-function rwChip(lbl,on,fn){return `<button type="button" class="btn sm" style="flex:1;justify-content:center;padding:8px 4px;font-size:14px;min-height:0;white-space:nowrap;${on?'background:var(--brand);color:#fff;border-color:var(--brand);font-weight:800;':''}" onclick="rwRead();${fn};render()">${lbl}</button>`;}
+function rwChip(lbl,on,fn){return `<button type="button" class="btn sm" style="flex:1;justify-content:center;padding:6px 4px;font-size:14px;min-height:0;white-space:nowrap;${on?'background:var(--brand);color:#fff;border-color:var(--brand);font-weight:800;':''}" onclick="rwRead();${fn};render()">${lbl}</button>`;}
 function rwLsAdd(){rwRead();if(rw.d.ls.length<2)rw.d.ls.push({type:'',tc:'',pl:'',st:todayStr(),per:S().lessonTotal||4,mon:1,fee:'',day:'',tm:''});render();}
 function rwLsDel(i){rwRead();rw.d.ls.splice(i,1);if(!rw.d.ls.length)rw.d.ls.push({type:'',tc:'',pl:'',st:todayStr(),per:S().lessonTotal||4,mon:1,fee:'',day:'',tm:''});render();}
 function vRegW(editId){
@@ -1588,7 +1591,7 @@ function vRegW(editId){
   const d=rw.d,T=S().bizType==='teacher',edit=!!rw.id;
   const STEPS=T?3:2;
   const stepName=T?(rw.step===1?'① 기본정보':rw.step===2?'② 강의 전담':'③ 레슨정보'):(rw.step===1?'① 기본정보 · 회비':'② 레슨정보');
-  const dots=`<div class="row" style="justify-content:center;gap:8px;margin:0 0 5px">${Array.from({length:STEPS},(_,ix)=>ix+1).map(n=>`<span onclick="rwGo(${n})" style="cursor:pointer;width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;${rw.step===n?'background:var(--brand);color:#fff':'background:#e5e7eb;color:#6b7280'}">${n}</span>`).join('<span style="color:#d1d5db;align-self:center;letter-spacing:-1px">────</span>')}</div>`;
+  const dots=`<div class="row" style="justify-content:center;gap:8px;margin:0 0 3px">${Array.from({length:STEPS},(_,ix)=>ix+1).map(n=>`<span onclick="rwGo(${n})" style="cursor:pointer;width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;${rw.step===n?'background:var(--brand);color:#fff':'background:#e5e7eb;color:#6b7280'}">${n}</span>`).join('<span style="color:#d1d5db;align-self:center;letter-spacing:-1px">────</span>')}</div>`;
   const gOpt=sel=>`<option value="">선택</option>`+db.groups.map(g=>`<option value="${g.id}" ${sel===g.id?'selected':''}>${esc(g.name)}</option>`).join('');
   const btns=rw.step===1
     ?`<div class="row" style="gap:6px;margin-top:8px">
@@ -1605,18 +1608,18 @@ function vRegW(editId){
         <button type="button" class="btn primary" style="font-weight:800;font-size:16px" onclick="rwFinish()">✅ 회원등록 완료</button></div>`);
   let body='';
   if(rw.step===1){
-    const F=(lbl,inner)=>`<div class="field" style="flex:1;min-width:0;margin:0">${lbl?`<label style="font-size:13.5px;margin:0 0 3px;display:block">${lbl}</label>`:''}${inner}</div>`;
-    body=`<div style="display:flex;flex-direction:column;gap:5px">
+    const F=(lbl,inner)=>`<div class="field" style="flex:1;min-width:0;margin:0">${lbl?`<label style="font-size:13px;margin:0 0 2px;display:block">${lbl}</label>`:''}${inner}</div>`;
+    body=`<div style="display:flex;flex-direction:column;gap:4px">
       <div class="row" style="gap:6px;flex-wrap:nowrap;align-items:flex-end">
-        ${F('소속(단체)',`<select id="rw1_g1" style="width:100%;padding:8px 10px">${gOpt(d.g1)}</select>`)}
+        ${F('소속(단체)',`<select id="rw1_g1" style="width:100%;padding:7px 10px">${gOpt(d.g1)}</select>`)}
         <button type="button" class="btn" style="flex:1;min-width:0;justify-content:center;font-weight:700;white-space:nowrap;min-height:0;padding:9px 4px" onclick="rwRead();var n=prompt('추가할 단체 이름');if(n&&n.trim()){db.groups.push({id:uid(),name:n.trim()});save();}render()">＋ 단체추가</button>
       </div>
       <div class="row" style="gap:6px;flex-wrap:nowrap">
-        ${F('성명 *',`<input id="rw1_name" value="${esc(d.name)}" placeholder="홍길동" style="width:100%;padding:8px 10px">`)}
-        ${F('전화번호',`<input id="rw1_phone" value="${esc(d.phone)}" inputmode="tel" placeholder="010-1234-5678" style="width:100%;padding:8px 10px">`)}
+        ${F('성명 *',`<input id="rw1_name" value="${esc(d.name)}" placeholder="홍길동" style="width:100%;padding:7px 10px">`)}
+        ${F('전화번호',`<input id="rw1_phone" value="${esc(d.phone)}" inputmode="tel" placeholder="010-1234-5678" style="width:100%;padding:7px 10px">`)}
       </div>
       <div class="row" style="gap:6px;flex-wrap:nowrap">
-        ${F('가입일',`<input id="rw1_reg" type="date" value="${d.reg}" style="width:100%;padding:8px 10px">`)}
+        ${F('가입일',`<input id="rw1_reg" type="date" value="${d.reg}" style="width:100%;padding:7px 10px">`)}
         ${F('회원상태',`<div class="row" style="gap:5px;flex-wrap:nowrap">
           ${rwChip('이용중',d.st==='이용중',"rw.d.st='이용중'")}
           ${rwChip('휴회',d.st==='휴회',"rw.d.st='휴회'")}
@@ -1627,27 +1630,31 @@ function vRegW(editId){
         ${rwChip('드럼',d.drum,"rw.d.drum=!rw.d.drum")}
         ${rwChip('노래',d.song,"rw.d.song=!rw.d.song")}
         ${rwChip('직접입력',d.etcOn,"rw.d.etcOn=!rw.d.etcOn")}
-        ${d.etcOn?`<input id="rw1_etc" value="${esc(d.etc)}" placeholder="종목명" style="flex:1;min-width:100px;padding:8px 8px">`:''}</div></div>
+        ${d.etcOn?`<input id="rw1_etc" value="${esc(d.etc)}" placeholder="종목명" style="flex:1;min-width:100px;padding:7px 8px">`:''}</div></div>
       ${T?'':`<div class="row" style="gap:5px;flex-wrap:nowrap;align-items:center"><label style="flex:none;width:64px;font-size:13.5px;font-weight:700;margin:0">회원유형</label><div class="row" style="flex:1;min-width:0;gap:5px;flex-wrap:nowrap">
         ${rwChip('일반회원',d.kGen,"rw.d.kGen=!rw.d.kGen")}
         ${rwChip('개인실',d.kRoom,"rw.d.kRoom=!rw.d.kRoom")}
         ${rwChip('레슨회원',d.kLesson,"rw.d.kLesson=!rw.d.kLesson")}
-        ${d.kRoom?`<input id="rw2_room" value="${esc(d.roomNo)}" placeholder="개인실№" inputmode="numeric" style="flex:none;width:78px;padding:8px 6px">`:''}</div></div>
+        ${d.kRoom?`<input id="rw2_room" value="${esc(d.roomNo)}" placeholder="개인실№" inputmode="numeric" style="flex:none;width:78px;padding:7px 6px">`:''}</div></div>
       ${(d.kGen||d.kRoom)?`
       <div class="row" style="gap:6px;flex-wrap:nowrap">
-        ${F('월 '+FL(),`<input id="rw2_fee" type="number" value="${d.fee}" inputmode="numeric" style="width:100%;padding:8px 8px">`)}
-        ${F('납부주기',`<select id="rw2_cyc" style="width:100%;padding:8px 6px">${[[1,'매월'],[2,'2개월'],[3,'3개월'],[6,'6개월'],[12,'12개월']].map(([c,l2])=>`<option value="${c}" ${Number(d.cyc)===c?'selected':''}>${l2}</option>`).join('')}</select>`)}
-        ${F(FL()+' 시작일',`<input id="rw2_fs" type="date" value="${d.feeStart}" style="width:100%;padding:8px 6px">`)}
+        ${F('월 '+FL(),`<input id="rw2_fee" type="number" value="${d.fee}" inputmode="numeric" style="width:100%;padding:7px 8px">`)}
+        ${F('납부주기',`<select id="rw2_cyc" style="width:100%;padding:7px 6px">${[[1,'매월'],[2,'2개월'],[3,'3개월'],[6,'6개월'],[12,'12개월']].map(([c,l2])=>`<option value="${c}" ${Number(d.cyc)===c?'selected':''}>${l2}</option>`).join('')}</select>`)}
+        ${F(FL()+' 시작일',`<input id="rw2_fs" type="date" value="${d.feeStart}" style="width:100%;padding:7px 6px">`)}
       </div>
       <div class="row" style="gap:5px;flex-wrap:nowrap;align-items:center"><label style="flex:none;width:64px;font-size:13.5px;font-weight:700;margin:0">선납개월</label><div class="row" style="flex:1;min-width:0;gap:4px;flex-wrap:wrap">
         ${[[0,'없음'],[1,'1'],[2,'2'],[3,'3'],[6,'6']].map(([n,l2])=>rwChip(l2,Number(d.prepay)===n&&!d.prepayC,"rw.d.prepay="+n+";rw.d.prepayC=false")).join('')}
         ${rwChip('직접',!!d.prepayC,"rw.d.prepayC=true")}
-        ${d.prepayC?`<input id="rw2_prec" type="number" value="${d.prepay}" placeholder="개월" style="width:64px;padding:8px 6px" inputmode="numeric">`:''}</div></div>`
+        ${d.prepayC?`<input id="rw2_prec" type="number" value="${d.prepay}" placeholder="개월" style="width:64px;padding:7px 6px" inputmode="numeric">`:''}</div></div>`
       :`<div class="muted" style="background:var(--brand-soft);border-radius:8px;padding:9px 11px">ℹ️ 레슨회원만 선택 시 ${FL()} 없이 레슨비만 관리합니다.</div>`}
       <div class="row" style="gap:5px;flex-wrap:nowrap;align-items:center"><label style="flex:none;width:64px;font-size:13.5px;font-weight:700;margin:0">락커</label><div class="row" style="flex:1;min-width:0;gap:5px;flex-wrap:nowrap">
         ${rwChip('사용',d.lockerOn,"rw.d.lockerOn=true")}
         ${rwChip('미사용',!d.lockerOn,"rw.d.lockerOn=false")}
-        ${d.lockerOn?`<input id="rw2_lno" value="${esc(d.lockerNo)}" placeholder="락커번호" inputmode="numeric" style="flex:1;min-width:64px;padding:8px 8px">`:''}</div></div>`}
+        ${d.lockerOn?`<input id="rw2_lno" value="${esc(d.lockerNo)}" placeholder="락커번호" inputmode="numeric" style="flex:1;min-width:64px;padding:7px 8px">`:''}</div></div>
+      <div class="row" style="gap:5px;flex-wrap:nowrap;align-items:center"><label style="flex:none;width:64px;font-size:13.5px;font-weight:700;margin:0">앙상블</label><div class="row" style="flex:1;min-width:0;gap:5px;flex-wrap:nowrap;align-items:center">
+        ${rwChip('🎼 참여',d.ensOn,"rw.d.ensOn=!rw.d.ensOn")}
+        ${d.ensOn?`<input id="rw2_ens" type="number" value="${d.ensFee}" placeholder="앙상블비" inputmode="numeric" style="flex:1;min-width:76px;padding:7px 8px">`:''}
+        ${d.ensOn?`<span class="muted" style="flex:none;font-size:12px;white-space:nowrap">원/월 · 0=면제</span>`:''}</div></div>`}
     </div>`;
   }else if(rw.step===2&&T){
     body=`<div style="text-align:center;margin-bottom:8px"><span class="badge b-brand" style="font-size:13.5px">운영형태: 선생님 (강의 전담)</span></div>
@@ -1692,7 +1699,7 @@ function vRegW(editId){
     </div>`).join('')}
     ${rw.d.ls.length<2?`<button type="button" class="btn" style="width:100%;justify-content:center;border-style:dashed" onclick="rwLsAdd()">＋ 다른 레슨 추가</button>`:''}`;
   }
-  return `<div class="card" style="border:2.5px solid var(--brand);background:#f6f7ff;padding:11px 12px">
+  return `<div class="card" style="border:2.5px solid var(--brand);background:#f6f7ff;padding:9px 11px">
     <div class="row" style="margin-bottom:4px"><h2 style="margin:0;font-size:18px">${edit?'회원 정보 수정':'회원등록'} <span class="muted" style="font-weight:400;font-size:13.5px">${stepName}</span></h2>
       <div class="spacer"></div><button type="button" class="btn sm" onclick="rw=null;go('members')">✕</button></div>
     ${dots}${body}${btns}</div>`;
@@ -2092,7 +2099,7 @@ function noticeMgrHtml(){
         const k=noticeKind(n);
         const tgt=k.cat==='fee'?'납부 대상자':(k.cat==='rest'?'휴회 회원':(k.cat==='ens'?'앙상블 참여자':noticeTargetLabel(n.target)));
         return `
-        <div style="border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-top:8px">
+        <div style="border:1px solid var(--line);border-radius:8px;padding:7px 10px;margin-top:8px">
           <div class="row" style="flex-wrap:nowrap;align-items:center">
             <span style="flex:none;font-size:12px;font-weight:800;color:${NCAT_CLR[k.cat]||'var(--brand)'}">${esc(k.name)}</span>
             <b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(n.title)}</b>
@@ -2354,7 +2361,7 @@ function ppEditor(fixedMid){
         :`<select id="pp_member" style="width:110px;flex:none;padding:8px 4px" onchange="ppPrefill()">${ms.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('')}</select>`}
       <select id="pp_item" style="width:auto;flex:none;padding:8px 4px" onclick="event.stopPropagation()" onchange="ppPrefill()">
         <option value="F">${FL()}+락카</option><option value="L">레슨(개인)</option><option value="G">레슨(단체)</option></select>
-      <input type="number" id="pp_amt" placeholder="금액" inputmode="numeric" value="${ppDefaultAmt(m0,'F')||''}" style="width:100px;flex:none;padding:8px 6px" onclick="event.stopPropagation()">
+      <input type="number" id="pp_amt" placeholder="금액" inputmode="numeric" value="${ppDefaultAmt(m0,'F')||''}" style="width:100px;flex:none;padding:7px 6px" onclick="event.stopPropagation()">
       <input type="date" id="pp_date" value="${todayStr()}" style="width:140px;flex:none;padding:8px 4px" onclick="event.stopPropagation()">
       <button class="btn sm primary" onclick="event.stopPropagation();addMissedPay()">💾 입력</button>
       ${fixedMid?`<button class="btn sm" onclick="event.stopPropagation();ppFixOn=!ppFixOn;render()">🛠 수정</button>`:''}
@@ -2749,7 +2756,7 @@ ${PRO()?`  <div class="card" id="sec-status"><h2>📋 회원별 레슨기록 ${P
         const list=groupsT[k];
         const tot=list.reduce((s,m)=>s+(cnt[m.id]||0),0);
         const tm2=teachers.find(t2=>t2.name===k);
-        return `<div style="border:1.5px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:8px">
+        return `<div style="border:1.5px solid var(--line);border-radius:12px;padding:7px 10px;margin-bottom:8px">
           <div class="row" style="flex-wrap:nowrap"><b style="font-size:15px">👨‍🏫 ${esc(k)}${tm2?' <span class=\"muted\" style=\"font-size:12px\">('+esc(tm2.instrument)+')</span>':''}</b><div class="spacer"></div>
             <button class="btn sm" style="padding:4px 8px;font-size:13px;flex:none" onclick="settleSend('${esc(k)}')">📋 복사·전송</button></div>
           ${list.map(m=>`<div class="row" style="padding:4px 0;font-size:14px;flex-wrap:nowrap"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:700">${esc(m.name)}</span><span style="flex:none">${cnt[m.id]}회</span><span class="muted" style="flex:none;min-width:86px;text-align:right">${fmtWon(m.lessonFee||0)}</span></div>`).join('')}
@@ -3134,7 +3141,7 @@ function vLessonRecord(id){
   const customItems=(m.lessonRecCustom||[]).filter(c=>!baseItems.includes(c));
   const allItems=[...baseItems,...customItems];
   const selSet=new Set(m.lessonRecSel||[]);
-  const itemCk=allItems.map(it=>`<label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:700;border:1.5px solid ${selSet.has(it)?'var(--brand)':'var(--line)'};border-radius:9px;padding:8px 6px;background:#fff;overflow:hidden;white-space:nowrap;cursor:pointer"><input type="checkbox" class="rec-item-ck" data-item="${esc(it)}" ${selSet.has(it)?'checked':''} style="width:17px;height:17px;margin:0;flex:none" onchange="this.parentNode.style.borderColor=this.checked?'var(--brand)':'var(--line)'"><span style="overflow:hidden;text-overflow:ellipsis">${esc(it)}</span></label>`).join('');
+  const itemCk=allItems.map(it=>`<label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:700;border:1.5px solid ${selSet.has(it)?'var(--brand)':'var(--line)'};border-radius:9px;padding:7px 6px;background:#fff;overflow:hidden;white-space:nowrap;cursor:pointer"><input type="checkbox" class="rec-item-ck" data-item="${esc(it)}" ${selSet.has(it)?'checked':''} style="width:17px;height:17px;margin:0;flex:none" onchange="this.parentNode.style.borderColor=this.checked?'var(--brand)':'var(--line)'"><span style="overflow:hidden;text-overflow:ellipsis">${esc(it)}</span></label>`).join('');
   const itemEditor=recItemOpen===m.id?`<div style="background:#fff;border:1.5px dashed var(--brand);border-radius:10px;padding:8px;margin-top:6px">
     <b style="font-size:13px">📝 ${instKey} 기본 항목 변경 <span class="muted" style="font-weight:400;font-size:12px">(모든 ${instKey} 회원에게 적용)</span></b>
     <div class="row" style="gap:5px;margin-top:6px;flex-wrap:wrap">
@@ -3676,7 +3683,7 @@ function vLedger(){
       ${ledgerEdit===e.id?`<tr><td colspan="6" style="background:var(--brand-soft);padding:9px 8px;border:2px solid var(--brand);border-radius:10px">
         <div class="row" style="gap:6px;flex-wrap:wrap;align-items:flex-end">
           <div style="flex:1.2;min-width:130px"><label>날짜</label><input type="date" id="le_date" value="${e.date}" style="padding:8px 4px"></div>
-          <div style="flex:1;min-width:110px"><label>금액</label><input type="number" id="le_amt" value="${e.amount}" inputmode="numeric" style="padding:8px 6px"></div>
+          <div style="flex:1;min-width:110px"><label>금액</label><input type="number" id="le_amt" value="${e.amount}" inputmode="numeric" style="padding:7px 6px"></div>
           ${e.auto?`<div style="flex:0.9;min-width:92px"><label>유형</label><select id="le_kind" style="padding:8px 4px">${(()=>{const pl0=db.payLogs.find(p3=>p3.id===String(e.id).replace('auto_',''));const cur0=pl0?(pl0.type==='lesson'?'L':(pl0.memo==='단체레슨'?'G':'F')):'F';return [['F',FL()],['L','레슨비'],['G','단체']].map(([v3,l3])=>`<option value="${v3}" ${cur0===v3?'selected':''}>${l3}</option>`).join('');})()}</select></div>`:''}
           <button class="btn sm primary" onclick="ledgerEditSave('${e.id}')">💾 저장</button>
           <button class="btn sm danger" onclick="ledgerEditDel('${e.id}')">🗑 삭제</button>
@@ -3839,7 +3846,7 @@ function vSettings(){
       const list=db.prices.slice().filter(x=>!HIDE.includes(x.name)).sort((a,b)=>{const x=ORDER.indexOf(a.name),y=ORDER.indexOf(b.name);return (x<0?99:x)-(y<0?99:y);});
       const row=pr=>`<div class="row" style="margin-bottom:6px;gap:5px;flex-wrap:nowrap;overflow:hidden;align-items:center">
         <span style="flex:1;min-width:0;font-weight:700;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${LBL[pr.name]||esc(pr.name)}</span>
-        <input id="pr_${pr.id}" type="number" value="${pr.amount}" inputmode="numeric" style="width:104px;flex:none;font-size:16px;padding:8px 8px">
+        <input id="pr_${pr.id}" type="number" value="${pr.amount}" inputmode="numeric" style="width:104px;flex:none;font-size:16px;padding:7px 8px">
         ${pr.cat==='레슨'?`<select id="prlen_${pr.id}" style="width:74px;flex:none;font-size:16px;padding:8px 4px">${[30,40,50,60,90].map(l=>`<option value="${l}" ${(pr.len||60)==l?'selected':''}>${l}분</option>`).join('')}</select>`:''}
         <button class="btn sm primary" style="flex:none;padding:8px 9px;font-size:14px" onclick="savePriceRow('${pr.id}')">수정</button>
         ${ORDER.includes(pr.name)?'':`<button class="btn sm danger" style="flex:none;padding:8px 7px;font-size:13px" onclick="delPrice('${pr.id}')">삭제</button>`}</div>`;
@@ -3850,8 +3857,8 @@ function vSettings(){
     ${PRO()?`<div class="row mt"><button class="btn sm" onclick="addPrice()">➕ 항목 추가</button></div>
     <div class="row" style="gap:5px;margin-top:10px;border-top:1px dashed var(--line);padding-top:10px;flex-wrap:nowrap;align-items:flex-end">
       <b style="flex:none;font-size:15px">특수 납부주기</b>
-      <div style="flex:1;min-width:0"><label>개월</label><input id="sc_m" type="number" min="0" max="12" value="${(s.spCycle&&s.spCycle.m)??1}" style="padding:8px 6px"></div>
-      <div style="flex:1;min-width:0"><label>일</label><input id="sc_d" type="number" min="0" max="30" value="${(s.spCycle&&s.spCycle.d)??15}" style="padding:8px 6px"></div>
+      <div style="flex:1;min-width:0"><label>개월</label><input id="sc_m" type="number" min="0" max="12" value="${(s.spCycle&&s.spCycle.m)??1}" style="padding:7px 6px"></div>
+      <div style="flex:1;min-width:0"><label>일</label><input id="sc_d" type="number" min="0" max="30" value="${(s.spCycle&&s.spCycle.d)??15}" style="padding:7px 6px"></div>
       <button class="btn sm primary" style="flex:none" onclick="S().spCycle={m:Number(document.getElementById('sc_m').value)||0,d:Number(document.getElementById('sc_d').value)||0};save();render();toast('특수 주기 저장 — 회원 납부주기에서 선택 가능')">저장</button>
     </div>
     <div class="muted" style="margin-top:4px;font-size:13px">예: 1개월 15일 — 회원정보의 납부주기에서 [특수]를 선택하면 이 주기로 계산됩니다.</div>`:''}
@@ -4516,7 +4523,7 @@ function vMessages(){
   <div class="card"><h2>✉️ 자동 문자 문안</h2>
     <div class="muted" style="margin-bottom:6px;font-size:13px">버튼을 눌러 발송되는 문자의 내용입니다. { } 변수는 발송 시 자동으로 채워집니다.</div>
     ${SYS_ITEMS.map(([k,t,d])=>`
-      <div style="border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-top:8px">
+      <div style="border:1px solid var(--line);border-radius:8px;padding:7px 10px;margin-top:8px">
         <div class="row" style="align-items:center"><b style="flex:1">${esc(sysTitle(k,t))}</b>
           ${sysEdit===k?'':`<button class="btn sm" style="padding:4px 9px;font-size:13px" onclick="sysEdit=sysEdit==='${k}'?null:'${k}';render()">수정</button>`}
         </div>
@@ -4535,7 +4542,7 @@ function vMessages(){
     <div class="row" style="margin-bottom:4px"><span class="muted" style="font-size:13px">직접 만들어 쓰는 문안입니다. [📨 단체발송]으로 단체를 골라 문자를 보내거나, [복사] 후 붙여넣어 사용하세요.</span><div class="spacer"></div>
       ${cmNew?'':`<button class="btn sm primary" onclick="cmNew=true;cmEdit=null;render()">➕ 문안 추가</button>`}</div>
     ${cmNew?`
-      <div style="border:1px solid var(--indigo,#6366f1);border-radius:8px;padding:8px 10px;margin-top:8px">
+      <div style="border:1px solid var(--indigo,#6366f1);border-radius:8px;padding:7px 10px;margin-top:8px">
         <input id="cmTi_new" placeholder="제목 (예: 연주회 안내)" style="width:100%;font-weight:600">
         <textarea id="cmTa_new" rows="6" placeholder="문안 내용" style="width:100%;margin-top:6px;line-height:1.6;resize:vertical"></textarea>
         <div class="row" style="gap:5px;margin-top:6px">
@@ -4543,7 +4550,7 @@ function vMessages(){
           <button class="btn sm" onclick="cmNew=false;render()">취소</button></div>
       </div>`:''}
     ${db.customMsgs.length?db.customMsgs.map(c=>`
-      <div style="border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-top:8px">
+      <div style="border:1px solid var(--line);border-radius:8px;padding:7px 10px;margin-top:8px">
         <div class="row" style="align-items:center;gap:5px"><b style="flex:1">${esc(c.title)}</b>
           ${cmEdit===c.id?'':`<button class="btn sm primary" style="padding:4px 9px;font-size:13px" onclick="cmSend=cmSend==='${c.id}'?null:'${c.id}';cmSched=1;render()">📨 단체발송</button>
           <button class="btn sm" style="padding:4px 9px;font-size:13px" onclick="cmCopy('${c.id}')">📋 복사</button>
@@ -4558,7 +4565,7 @@ function vMessages(){
             <button class="btn sm" onclick="cmEdit=null;render()">취소</button></div>`
         :`<div class="copybox" style="margin-top:6px;white-space:pre-wrap;font-size:13px;max-height:110px;overflow-y:auto">${esc(c.body)}</div>`}
         ${cmSend===c.id?`
-        <div style="background:var(--brand-soft,#eef2ff);border-radius:8px;padding:8px 10px;margin-top:8px">
+        <div style="background:var(--brand-soft,#eef2ff);border-radius:8px;padding:7px 10px;margin-top:8px">
           <div class="row" style="gap:5px;align-items:flex-end;flex-wrap:wrap">
             <div style="flex:1;min-width:90px"><label>1단체</label><select id="cs_g1" onchange="cmCount()"><option value="">전체</option>${db.groups.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join('')}</select></div>
             <div style="flex:1;min-width:90px"><label>2단체</label><select id="cs_g2" onchange="cmCount()"><option value="">전체</option>${db.groups.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join('')}</select></div>
