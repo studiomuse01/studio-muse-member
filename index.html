@@ -201,7 +201,7 @@ table.members td,table.members th{font-size:16px}
   <div id="iosGuide" style="display:none;color:#c7d2fe;font-size:13px;text-align:center;line-height:1.6;background:rgba(255,255,255,.08);border-radius:12px;padding:8px 14px">아이폰은 Safari 아래 <b>공유(↑)</b> 버튼 →<br><b>"홈 화면에 추가"</b>를 눌러 설치하세요</div>
   <a href="#" style="color:#64748b;font-size:12px" onclick="fbReset();return false">비밀번호를 잊으셨나요?</a>
   <div id="lockMsg" style="color:#f87171;font-size:13px;min-height:18px;text-align:center"></div>
-  <div style="color:#475569;font-size:11.5px;text-align:center;max-width:300px">☁️ 데이터는 본인 계정의 클라우드에 안전하게 저장되어<br>폰을 바꿔도 로그인하면 그대로 유지됩니다<br><span style="color:#4c4a7a">버전 v0840</span></div>
+  <div style="color:#475569;font-size:11.5px;text-align:center;max-width:300px">☁️ 데이터는 본인 계정의 클라우드에 안전하게 저장되어<br>폰을 바꿔도 로그인하면 그대로 유지됩니다<br><span style="color:#4c4a7a">버전 v0841</span></div>
 </div>
 <div class="mobiletop"><div id="brandMobile">🎷 회원관리</div><div class="row" style="gap:6px">
   <button class="btn topnav" id="topBack" style="font-size:19px;padding:4px 12px" onclick="goBack()">◀</button>
@@ -3024,7 +3024,8 @@ function vPayStatus(id){ // 납부현황 확인 (조회 전용) — 이름 클�
   <div class="muted" style="text-align:center;font-size:12.5px;margin-bottom:20px">[＋ 수납 등록]을 누르면 받을 항목을 체크만 하면 됩니다. 미납·예정 항목은 자동으로 선택돼 있어요.</div>`;
 }
 function vFees(){
-  const all0=db.members.filter(m=>!isLongRest(m)&&!isStaffLike(m)&&(!feeGroup||m.groupId===feeGroup));
+  // 강사·관리자 등은 기본 제외하되, 실제 납부할 항목(개인실비·락커·회비 등)이 있으면 회비 명단에 포함 (예: 이태현 강사가 개인실 사용)
+  const all0=db.members.filter(m=>!isLongRest(m)&&(!feeGroup||m.groupId===feeGroup)&&(!isStaffLike(m)||payItemsOf(m).length>0));
   let ms=all0;
   if(feeInstF)ms=ms.filter(m=>String(m.instrument||'').includes(feeInstF));
   if(feeQ)ms=ms.filter(m=>m.name.includes(feeQ)||(m.phone||'').includes(feeQ));
@@ -5150,7 +5151,7 @@ function vSettingsTeacher(){
   <div class="card"><h2 style="font-size:17px">💾 백업</h2>
     <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn" onclick="exportData()">⬇️ 백업</button>
       <button class="btn" onclick="document.getElementById('importFile').click()">⬆️ 복원</button></div>
-    <div class="muted" style="text-align:center;margin-top:8px;cursor:pointer" onclick="verTap()">앱 버전 v0840</div></div>`;
+    <div class="muted" style="text-align:center;margin-top:8px;cursor:pointer" onclick="verTap()">앱 버전 v0841</div></div>`;
 }
 function vSettings(){
   if(S().bizType==='teacher'&&!SM()&&!TM())return vSettingsTeacher();
@@ -6345,7 +6346,7 @@ function vSettingsHub(){
     <div class="card"><h2>👤 계정</h2>
       <div class="row" style="flex-wrap:wrap;gap:6px"><span class="muted">로그인: <b>${esc(window.fbUserEmail||'')}</b> · 현재 모드: <b>${window.guestTeacher?'초대선생님':'선생님'}</b></span><div class="spacer"></div>
       <button class="btn sm danger" onclick="window.fbLogout&&window.fbLogout()">로그아웃</button></div></div>
-    <div class="muted" style="text-align:center;margin-top:4px;cursor:pointer" onclick="verTap()">앱 버전 v0840</div>`;
+    <div class="muted" style="text-align:center;margin-top:4px;cursor:pointer" onclick="verTap()">앱 버전 v0841</div>`;
   }
   return `<div class="pagehead"><div><h1>⚙️ 설정</h1><div class="sub">원하는 작업을 선택하세요</div></div></div>
   ${testerCard()}
@@ -6359,7 +6360,7 @@ function vSettingsHub(){
   ${guestCard}
   ${tCard}
   ${auditCard}
-  <div class="muted" style="text-align:center;margin-top:4px;cursor:pointer" onclick="verTap()">앱 버전 v0840</div>`;
+  <div class="muted" style="text-align:center;margin-top:4px;cursor:pointer" onclick="verTap()">앱 버전 v0841</div>`;
 
 }
 
