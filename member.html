@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>회원 관리</title>
+<style>
+  :root{
+    --blue:#1d4ed8; --blue-bg:#eff6ff;
+    --red:#dc2626; --red-bg:#fef2f2;
+    --green:#15803d; --green-bg:#f0fdf4;
+    --ink:#111827; --sub:#6b7280; --line:#e5e7eb;
+    --bg:#f3f4f6; --card:#ffffff;
+    --navy:#0f766e;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html{font-size:17px;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    padding-bottom:calc(76px + env(safe-area-inset-bottom));
+  }
+  header{
+    position:sticky; top:0; z-index:20; background:var(--navy); color:#fff;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 16px;
+  }
+  header h1{font-size:1.25rem; margin:0; font-weight:800;}
+  header button{
+    background:rgba(255,255,255,.15); border:none; color:#fff; font-size:1.3rem;
+    width:44px; height:44px; border-radius:12px; cursor:pointer;
+  }
+  main{max-width:760px; margin:0 auto; padding:14px;}
+  .view{display:none;}
+  .view.active{display:block;}
+  .card{background:var(--card); border-radius:16px; padding:16px; margin-bottom:12px; box-shadow:0 1px 3px rgba(0,0,0,.06);}
+  h2.sec{font-size:1.05rem; margin:18px 4px 10px;}
+  .muted{color:var(--sub); font-size:.9rem;}
+  .amt-in{color:var(--blue); font-weight:700;}
+  .amt-out{color:var(--red); font-weight:700;}
+  .amt-bal{color:var(--ink); font-weight:800;}
+
+  .stat-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .stat{background:var(--card); border-radius:16px; padding:14px 16px; box-shadow:0 1px 3px rgba(0,0,0,.06);}
+  .stat .lbl{font-size:.9rem; color:var(--sub); margin-bottom:6px;}
+  .stat .val{font-size:1.45rem; font-weight:800;}
+  .stat.wide{grid-column:1/-1; text-align:center; padding:20px 16px;}
+  .stat.wide .val{font-size:2.1rem;}
+  .stat.alert .val{color:var(--red);}
+  .quick-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px;}
+  .quick{
+    border:none; border-radius:16px; padding:20px 10px; font-size:1.1rem; font-weight:700;
+    cursor:pointer; color:#fff; display:flex; flex-direction:column; align-items:center; gap:8px;
+  }
+  .quick .ico{font-size:1.7rem;}
+  .q-blue{background:#2563eb;} .q-green{background:#059669;}
+  .q-teal{background:#0f766e;} .q-navy{background:#334155;}
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    border:none; border-radius:12px; padding:14px 18px; font-size:1.05rem; font-weight:700;
+    cursor:pointer; min-height:48px; white-space:nowrap;
+  }
+  .btn-pri{background:var(--navy); color:#fff;}
+  .btn-blue{background:var(--blue); color:#fff;}
+  .btn-red{background:var(--red); color:#fff;}
+  .btn-ghost{background:#fff; color:var(--ink); border:1.5px solid var(--line);}
+  .btn-sm{padding:8px 14px; font-size:.92rem; min-height:40px; border-radius:10px;}
+  .btn-block{width:100%;}
+  .row{display:flex; gap:8px; align-items:center;}
+  .row>.grow{flex:1;}
+
+  label.f{display:block; font-size:.95rem; font-weight:700; margin:14px 2px 6px;}
+  label.f .req{color:var(--red);}
+  input[type=text],input[type=date],input[type=month],input[type=tel],select,textarea{
+    width:100%; font-size:1.1rem; padding:13px 12px; border:1.5px solid #d1d5db;
+    border-radius:12px; background:#fff; color:var(--ink); font-family:inherit;
+  }
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--blue); border-color:var(--blue);}
+
+  .chips{display:flex; gap:8px; flex-wrap:wrap; margin:10px 0;}
+  .chip{
+    border:1.5px solid var(--line); background:#fff; border-radius:999px;
+    padding:9px 16px; font-size:.95rem; font-weight:700; cursor:pointer; color:var(--sub); min-height:42px;
+  }
+  .chip.on{background:var(--navy); border-color:var(--navy); color:#fff;}
+
+  .badge{font-size:.8rem; font-weight:700; padding:4px 10px; border-radius:999px;}
+  .b-paid{background:var(--green-bg); color:var(--green);}
+  .b-unpaid{background:var(--red-bg); color:var(--red);}
+  .b-quit{background:#e5e7eb; color:var(--sub);}
+
+  .t-item{display:flex; align-items:center; gap:10px; padding:13px 4px; border-bottom:1px solid var(--line);}
+  .t-item:last-child{border-bottom:none;}
+  .t-main{flex:1; min-width:0;}
+  .t-title{font-weight:700; font-size:1.05rem;}
+  .t-sub{font-size:.87rem; color:var(--sub); margin-top:3px;}
+  .t-sub a{color:var(--blue); font-weight:700; text-decoration:none;}
+  .t-amt{text-align:right; font-size:1.05rem; white-space:nowrap;}
+
+  .tbl-wrap{overflow-x:auto; -webkit-overflow-scrolling:touch;}
+  table.ledger{border-collapse:collapse; width:100%; min-width:560px; font-size:.92rem;}
+  table.ledger th{
+    background:#f9fafb; color:var(--sub); font-size:.82rem; padding:10px 8px;
+    border-bottom:2px solid var(--line); text-align:center; white-space:nowrap;
+  }
+  table.ledger td{padding:11px 8px; border-bottom:1px solid var(--line); white-space:nowrap;}
+  td.num{text-align:right;}
+  .lb{font-size:.78rem; font-weight:700; padding:3px 8px; border-radius:6px; white-space:nowrap;}
+  .lb-fee{background:var(--blue-bg); color:var(--blue);}
+  .lb-exp{background:var(--red-bg); color:var(--red);}
+  .sum-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; text-align:center;}
+  .sum-grid .lbl{font-size:.82rem; color:var(--sub); margin-bottom:4px;}
+  .sum-grid .val{font-size:1.1rem; font-weight:800;}
+
+  nav{
+    position:fixed; bottom:0; left:0; right:0; z-index:30;
+    background:#fff; border-top:1px solid var(--line);
+    display:flex; padding-bottom:env(safe-area-inset-bottom);
+  }
+  nav button{
+    flex:1; border:none; background:none; padding:9px 0 7px; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+    font-size:.85rem; font-weight:700; color:var(--sub); min-height:62px;
+  }
+  nav button .ico{font-size:1.45rem;}
+  nav button.on{color:var(--navy);}
+
+  #overlay{
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:50;
+    align-items:flex-end; justify-content:center;
+  }
+  #overlay.show{display:flex;}
+  #modal{
+    background:#fff; width:100%; max-width:560px; max-height:88vh; overflow-y:auto;
+    border-radius:20px 20px 0 0; padding:20px 18px calc(24px + env(safe-area-inset-bottom));
+  }
+  @media(min-width:600px){ #overlay{align-items:center;} #modal{border-radius:20px;} }
+  #modal h3{margin:0 0 4px; font-size:1.2rem;}
+  .modal-actions{display:flex; gap:8px; margin-top:22px;}
+  .modal-actions .btn{flex:1;}
+
+  #toast{
+    display:none; position:fixed; left:50%; bottom:calc(90px + env(safe-area-inset-bottom));
+    transform:translateX(-50%); background:#111827; color:#fff; padding:12px 20px;
+    border-radius:999px; font-size:.95rem; font-weight:700; z-index:60; white-space:nowrap;
+  }
+  #storageNote{display:none; background:#fef3c7; color:#92400e; font-size:.85rem; padding:8px 14px; text-align:center;}
+  .empty{text-align:center; color:var(--sub); padding:30px 10px; font-size:.95rem;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>👥 회원 관리</h1>
+  <button onclick="openSettings()" aria-label="설정">⚙️</button>
+</header>
+<div id="storageNote">⚠️ 미리보기 화면에서는 데이터가 저장되지 않습니다. 파일을 내려받아 브라우저로 열면 저장됩니다.</div>
+
+<main>
+  <section id="view-home" class="view active"></section>
+  <section id="view-members" class="view"></section>
+  <section id="view-pay" class="view"></section>
+  <section id="view-ledger" class="view"></section>
+</main>
+
+<nav>
+  <button id="nav-home" class="on" onclick="switchTab('home')"><span class="ico">🏠</span>홈</button>
+  <button id="nav-members" onclick="switchTab('members')"><span class="ico">👥</span>회원</button>
+  <button id="nav-pay" onclick="switchTab('pay')"><span class="ico">💵</span>회비납부</button>
+  <button id="nav-ledger" onclick="switchTab('ledger')"><span class="ico">📒</span>출납부</button>
+</nav>
+
+<div id="overlay" onclick="if(event.target===this)closeModal()"><div id="modal"></div></div>
+<div id="toast"></div>
+
+<script>
+'use strict';
+const APP_VERSION = '1.0';
+const APP_DATE = '2026-08-13';
+/* 이전에 등록된 서비스 워커·캐시 정리(항상 최신 화면 표시) */
+try{
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});
+  }
+  if(window.caches && caches.keys){
+    caches.keys().then(ks=>ks.forEach(k=>caches.delete(k))).catch(()=>{});
+  }
+}catch(e){}
+
+/* ================= 저장소 ================= */
+const LS_KEY = 'museMemberV1';
+let memStore=null, storageOK=true;
+function loadRaw(){ try{ return localStorage.getItem(LS_KEY); }catch(e){ storageOK=false; return memStore; } }
+function saveRaw(s){ memStore=s; try{ localStorage.setItem(LS_KEY,s); }catch(e){ storageOK=false; document.getElementById('storageNote').style.display='block'; } }
+let S=null;
+function save(){ saveRaw(JSON.stringify(S)); }
+function emptyState(){ return { startBalance:0, defaultFee:30000, seq:1, members:[], payments:[], expenses:[], trash:[] }; }
+function load(){
+  const raw=loadRaw();
+  if(raw){ try{ S=JSON.parse(raw); }catch(e){ S=null; } }
+  if(!S){ S=emptyState(); seedSample(); save(); }
+  if(!S.trash) S.trash=[];
+}
+function nid(){ return S.seq++; }
+
+/* ================= 도우미 ================= */
+function pad2(n){ return String(n).padStart(2,'0'); }
+function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+function curMonth(){ return todayStr().slice(0,7); }
+function monthOffset(off){ const d=new Date(); const m=new Date(d.getFullYear(),d.getMonth()+off,1); return m.getFullYear()+'-'+pad2(m.getMonth()+1); }
+function dateInMonth(ym,day){ const [y,m]=ym.split('-').map(Number); const last=new Date(y,m,0).getDate(); return ym+'-'+pad2(Math.min(day,last)); }
+function fmt(n){ return (Number(n)||0).toLocaleString('ko-KR'); }
+function monthLabel(ym){ if(!ym) return ''; const [y,m]=ym.split('-'); return Number(m)+'월분('+y+')'; }
+function shortDate(d){ return d? d.slice(5).replace('-','/') : ''; }
+function parseAmt(s){ return Number(String(s||'').replace(/[^0-9]/g,''))||0; }
+function fmtAmtInput(el){ const v=parseAmt(el.value); el.value=v?v.toLocaleString('ko-KR'):''; }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ================= 샘플 ================= */
+function seedSample(){
+  const cur=monthOffset(0), prev=monthOffset(-1);
+  S.startBalance=200000; S.defaultFee=30000;
+  const mk=(name,phone,birth)=>({id:nid(),name,phone,birth,status:'active'});
+  const m1=mk('김영수','010-1234-5678','1958-03-15');
+  const m2=mk('박미숙','010-2345-6789','1962-07-22');
+  const m3=mk('이철호','010-3456-7890','1955-11-08');
+  const m4=mk('최순자','010-4567-8901','1960-01-30');
+  S.members=[m1,m2,m3,m4];
+  const pay=(m,date,month,amt,method)=>({id:nid(),memberId:m.id,name:m.name,date,month,amount:amt,method,memo:''});
+  S.payments=[
+    pay(m1,dateInMonth(prev,5), prev,30000,'계좌이체'),
+    pay(m1,dateInMonth(cur,5),  cur, 30000,'계좌이체'),
+    pay(m2,dateInMonth(prev,10),prev,30000,'현금'),
+    pay(m3,dateInMonth(prev,7), prev,30000,'계좌이체'),
+    pay(m3,dateInMonth(cur,7),  cur, 30000,'계좌이체'),
+  ];
+  S.expenses=[
+    {id:nid(),date:dateInMonth(cur,3),desc:'모임 다과비',amount:25000,method:'현금',memo:''},
+  ];
+}
+
+/* ================= 조회 ================= */
+function getMember(id){ return S.members.find(m=>m.id===id); }
+function memberPayments(id){ return S.payments.filter(p=>p.memberId===id); }
+function paidThrough(id){ const ps=memberPayments(id); return ps.length? ps.reduce((mx,p)=>p.month>mx?p.month:mx,ps[0].month):null; }
+function lastPayDate(id){ const ps=memberPayments(id); return ps.length? ps.reduce((mx,p)=>p.date>mx?p.date:mx,ps[0].date):null; }
+function isUnpaid(m){ if(m.status!=='active') return false; const pt=paidThrough(m.id); return !pt || pt<curMonth(); }
+
+function ledgerAll(){
+  const rows=[];
+  S.payments.forEach(p=>{
+    const m=getMember(p.memberId);
+    rows.push({seq:p.id,date:p.date,kind:'회비',name:(m?m.name:p.name||'(삭제된 회원)')+' · '+monthLabel(p.month),
+      inAmt:p.amount,outAmt:0,memo:p.memo||'',ref:{type:'payment',id:p.id}});
+  });
+  S.expenses.forEach(x=>{
+    rows.push({seq:x.id,date:x.date,kind:'지출',name:x.desc,inAmt:0,outAmt:x.amount,memo:x.memo||'',ref:{type:'expense',id:x.id}});
+  });
+  rows.sort((a,b)=>a.date===b.date? a.seq-b.seq : (a.date<b.date?-1:1));
+  let bal=S.startBalance;
+  rows.forEach(r=>{ bal+=r.inAmt-r.outAmt; r.bal=bal; });
+  return rows;
+}
+function currentBalance(){ const r=ledgerAll(); return r.length? r[r.length-1].bal : S.startBalance; }
+
+/* ================= 화면 전환 ================= */
+let tab='home';
+function switchTab(t){
+  tab=t;
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+t).classList.add('active');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('on'));
+  document.getElementById('nav-'+t).classList.add('on');
+  render();
+  window.scrollTo(0,0);
+}
+function render(){
+  if(tab==='home') renderHome();
+  else if(tab==='members') renderMembers();
+  else if(tab==='pay') renderPay();
+  else renderLedger();
+}
+
+/* ================= 홈 ================= */
+function renderHome(){
+  const cur=curMonth();
+  const act=S.members.filter(m=>m.status==='active');
+  const unpaid=act.filter(isUnpaid);
+  const paidCnt=act.length-unpaid.length;
+  const feeIn=S.payments.filter(p=>p.date.slice(0,7)===cur).reduce((s,p)=>s+p.amount,0);
+  const m=Number(cur.slice(5));
+  document.getElementById('view-home').innerHTML=`
+    <div class="stat-grid">
+      <div class="stat wide">
+        <div class="lbl">현재 잔액</div>
+        <div class="val amt-bal">${fmt(currentBalance())}원</div>
+      </div>
+      <div class="stat">
+        <div class="lbl">전체 회원</div>
+        <div class="val">${act.length}명</div>
+      </div>
+      <div class="stat">
+        <div class="lbl">${m}월 회비 수입</div>
+        <div class="val amt-in">${fmt(feeIn)}원</div>
+      </div>
+      <div class="stat">
+        <div class="lbl">${m}월 납부</div>
+        <div class="val" style="color:var(--green)">${paidCnt}명</div>
+      </div>
+      <div class="stat ${unpaid.length?'alert':''}" onclick="goUnpaid()" style="cursor:pointer">
+        <div class="lbl">${m}월 미납 ›</div>
+        <div class="val">${unpaid.length}명</div>
+      </div>
+    </div>
+    <h2 class="sec">빠른 실행</h2>
+    <div class="quick-grid">
+      <button class="quick q-blue" onclick="openPayForm()"><span class="ico">💵</span>회비 받기</button>
+      <button class="quick q-green" onclick="openMemberForm()"><span class="ico">🙋</span>회원 등록</button>
+      <button class="quick q-teal" onclick="switchTab('members')"><span class="ico">👥</span>회원 목록</button>
+      <button class="quick q-navy" onclick="switchTab('ledger')"><span class="ico">📒</span>출납부 보기</button>
+    </div>
+    ${unpaid.length?`<h2 class="sec">이번 달 미납 회원</h2><div class="card">${
+      unpaid.map(mm=>`
+        <div class="t-item">
+          <div class="t-main">
+            <div class="t-title">${esc(mm.name)}</div>
+            <div class="t-sub">최근 납부 ${lastPayDate(mm.id)?shortDate(lastPayDate(mm.id)):'없음'}</div>
+          </div>
+          <button class="btn btn-blue btn-sm" onclick="openPayForm(null,${mm.id})">회비 받기</button>
+        </div>`).join('')
+    }</div>`:''}
+    <div style="text-align:center;margin-top:16px">
+      <button class="btn btn-ghost" onclick="checkUpdate()">🔄 최신버전 확인</button>
+      <div class="muted" style="margin-top:6px">현재 버전 v${APP_VERSION} (${APP_DATE})</div>
+    </div>`;
+}
+function goUnpaid(){ memberFilter='unpaid'; switchTab('members'); }
+
+/* ================= 회원 ================= */
+let memberFilter='all', memberQuery='';
+function memberListFiltered(){
+  let list=S.members.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+  if(memberFilter==='unpaid') list=list.filter(isUnpaid);
+  else if(memberFilter==='quit') list=list.filter(m=>m.status==='quit');
+  else list=list.filter(m=>m.status==='active');
+  if(memberFilter==='all') list=S.members.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+  const q=memberQuery.trim();
+  if(q) list=list.filter(m=>m.name.includes(q)||String(m.phone||'').replace(/-/g,'').includes(q.replace(/-/g,'')));
+  return list;
+}
+function renderMembers(){
+  const filters=[['all','전체'],['active','이용 중'],['unpaid','미납만'],['quit','탈퇴']];
+  document.getElementById('view-members').innerHTML=`
+    <div class="row" style="margin-bottom:4px">
+      <input type="text" class="grow" placeholder="🔍 이름 또는 전화번호 검색"
+        value="${esc(memberQuery)}" oninput="memberQuery=this.value;renderMemberList()">
+      <button class="btn btn-pri" onclick="openMemberForm()">＋ 등록</button>
+    </div>
+    <div class="chips">${filters.map(([k,l])=>`<button class="chip ${memberFilter===k?'on':''}" onclick="memberFilter='${k}';renderMembers()">${l}</button>`).join('')}</div>
+    <div id="memberList"></div>`;
+  renderMemberList();
+}
+function renderMemberList(){
+  const box=document.getElementById('memberList');
+  if(!box) return;
+  const list=memberListFiltered();
+  if(!list.length){ box.innerHTML='<div class="empty">표시할 회원이 없습니다.</div>'; return; }
+  box.innerHTML='<div class="card">'+list.map(m=>{
+    let badge='';
+    if(m.status==='quit') badge='<span class="badge b-quit">탈퇴</span>';
+    else badge=isUnpaid(m)? '<span class="badge b-unpaid">미납</span>' : '<span class="badge b-paid">납부</span>';
+    return `<div class="t-item">
+      <div class="t-main" onclick="openMemberForm(${m.id})" style="cursor:pointer">
+        <div class="t-title">${esc(m.name)} ${badge}</div>
+        <div class="t-sub">${m.birth? '🎂 '+m.birth+' · ':''}${m.phone? '<a href="tel:'+esc(String(m.phone).replace(/[^0-9+]/g,''))+'" onclick="event.stopPropagation()">📞 '+esc(m.phone)+'</a>':''}</div>
+      </div>
+      ${m.status==='active'? `<button class="btn btn-blue btn-sm" onclick="openPayForm(null,${m.id})">회비</button>`:''}
+      <button class="btn btn-ghost btn-sm" onclick="openMemberForm(${m.id})">수정</button>
+    </div>`;
+  }).join('')+'</div>';
+}
+function openMemberForm(id){
+  const m=id? getMember(id):null;
+  openModal(`
+    <h3>${m?'회원 정보 수정':'회원 정보 입력'}</h3>
+    <label class="f">이름 <span class="req">*</span></label>
+    <input type="text" id="fName" value="${m?esc(m.name):''}" placeholder="예: 홍길동">
+    <label class="f">전화번호</label>
+    <input type="tel" id="fPhone" value="${m?esc(m.phone||''):''}" placeholder="010-0000-0000">
+    <label class="f">생년월일</label>
+    <input type="date" id="fBirth" value="${m&&m.birth?m.birth:''}">
+    <label class="f">상태</label>
+    <select id="fStatus">
+      <option value="active" ${!m||m.status==='active'?'selected':''}>이용 중</option>
+      <option value="quit" ${m&&m.status==='quit'?'selected':''}>탈퇴</option>
+    </select>
+    <div class="modal-actions">
+      ${m?`<button class="btn btn-red" onclick="deleteMember(${m.id})">삭제</button>`:''}
+      <button class="btn btn-ghost" onclick="closeModal()">닫기</button>
+      <button class="btn btn-pri" onclick="saveMember(${m?m.id:'null'})">저장</button>
+    </div>`);
+}
+function saveMember(id){
+  const name=document.getElementById('fName').value.trim();
+  const phone=document.getElementById('fPhone').value.trim();
+  const birth=document.getElementById('fBirth').value;
+  const status=document.getElementById('fStatus').value;
+  if(!name){ alert('이름을 입력해 주세요.'); return; }
+  if(id){
+    const m=getMember(id);
+    Object.assign(m,{name,phone,birth,status});
+    S.payments.forEach(p=>{ if(p.memberId===id) p.name=name; });
+    toast('회원 정보를 수정했습니다.');
+  }else{
+    S.members.push({id:nid(),name,phone,birth,status});
+    toast('회원을 등록했습니다.');
+  }
+  save(); closeModal(); render();
+}
+function deleteMember(id){
+  const m=getMember(id);
+  if(!confirm('「'+m.name+'」 회원을 삭제할까요?\n납부 기록은 출납부에 그대로 남습니다.\n(설정 > 휴지통에서 복구할 수 있습니다)')) return;
+  S.trash.unshift({tid:nid(),kind:'member',label:'회원: '+m.name,data:m,deletedAt:todayStr()});
+  S.members=S.members.filter(x=>x.id!==id);
+  save(); closeModal(); render(); toast('휴지통으로 이동했습니다.');
+}
+
+/* ================= 회비 납부 ================= */
+function renderPay(){
+  const list=S.payments.slice().sort((a,b)=>a.date===b.date? b.id-a.id : (a.date<b.date?1:-1));
+  document.getElementById('view-pay').innerHTML=`
+    <button class="btn btn-blue btn-block" onclick="openPayForm()">＋ 회비 받기</button>
+    <h2 class="sec">납부 내역 (${list.length}건)</h2>
+    <div class="card">${list.length? list.map(p=>{
+      const m=getMember(p.memberId);
+      return `<div class="t-item">
+        <div class="t-main">
+          <div class="t-title">${esc(m?m.name:p.name||'(삭제된 회원)')} <span class="muted">· ${monthLabel(p.month)}</span></div>
+          <div class="t-sub">납부일 ${p.date} · ${p.method}${p.memo?' · '+esc(p.memo):''}</div>
+        </div>
+        <div class="t-amt amt-in">+${fmt(p.amount)}원</div>
+        <button class="btn btn-ghost btn-sm" onclick="openPayForm(${p.id})">수정</button>
+      </div>`;
+    }).join(''):'<div class="empty">납부 내역이 없습니다.</div>'}</div>`;
+}
+function openPayForm(payId, memberId){
+  const p=payId? S.payments.find(x=>x.id===payId):null;
+  const selectable=S.members.filter(m=>m.status==='active').sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+  if(!selectable.length && !p){ alert('먼저 회원을 등록해 주세요.'); openMemberForm(); return; }
+  const selId=p? p.memberId : (memberId||'');
+  openModal(`
+    <h3>${p?'납부 내역 수정':'회비 받기'}</h3>
+    <label class="f">회원 <span class="req">*</span></label>
+    <select id="fMember" onchange="payMemberChanged()">
+      <option value="">회원을 선택하세요</option>
+      ${selectable.map(m=>`<option value="${m.id}" ${m.id===selId?'selected':''}>${esc(m.name)}</option>`).join('')}
+      ${p&&!getMember(p.memberId)?`<option value="${p.memberId}" selected>${esc(p.name)} (삭제된 회원)</option>`:''}
+    </select>
+    <label class="f">납부일 <span class="req">*</span></label>
+    <input type="date" id="fPayDate" value="${p?p.date:todayStr()}">
+    <label class="f">납부 대상 월 <span class="req">*</span></label>
+    <input type="month" id="fPayMonth" value="${p?p.month:curMonth()}">
+    <label class="f">납부 금액(원) <span class="req">*</span></label>
+    <input type="text" inputmode="numeric" id="fPayAmt" value="${p?fmt(p.amount):fmt(S.defaultFee)}" oninput="fmtAmtInput(this)">
+    <label class="f">납부 방법</label>
+    <select id="fPayMethod">${['계좌이체','현금','카드'].map(x=>`<option ${p&&p.method===x?'selected':''}>${x}</option>`).join('')}</select>
+    <label class="f">메모</label>
+    <input type="text" id="fPayMemo" value="${p?esc(p.memo||''):''}">
+    <div class="modal-actions">
+      ${p?`<button class="btn btn-red" onclick="deletePayment(${p.id})">납부 취소</button>`:''}
+      <button class="btn btn-ghost" onclick="closeModal()">닫기</button>
+      <button class="btn btn-blue" onclick="savePayment(${p?p.id:'null'})">저장</button>
+    </div>`);
+  if(!p && memberId) payMemberChanged();
+}
+function payMemberChanged(){
+  const id=Number(document.getElementById('fMember').value);
+  const m=getMember(id);
+  if(m){
+    const pt=paidThrough(m.id);
+    if(pt){
+      const [y,mo]=pt.split('-').map(Number);
+      const nxt=new Date(y,mo,1);
+      document.getElementById('fPayMonth').value=nxt.getFullYear()+'-'+pad2(nxt.getMonth()+1);
+    }
+  }
+}
+function savePayment(payId){
+  const memberId=Number(document.getElementById('fMember').value);
+  const date=document.getElementById('fPayDate').value;
+  const month=document.getElementById('fPayMonth').value;
+  const amount=parseAmt(document.getElementById('fPayAmt').value);
+  const method=document.getElementById('fPayMethod').value;
+  const memo=document.getElementById('fPayMemo').value.trim();
+  if(!memberId){ alert('회원을 선택해 주세요.'); return; }
+  if(!date){ alert('납부일을 입력해 주세요.'); return; }
+  if(!month){ alert('납부 대상 월을 입력해 주세요.'); return; }
+  if(!amount){ alert('납부 금액을 입력해 주세요.'); return; }
+  const dup=S.payments.find(p=>p.memberId===memberId && p.month===month && p.id!==payId);
+  if(dup){
+    const m=getMember(memberId);
+    if(!confirm('⚠️ 중복 납부 주의\n\n'+(m?m.name:'이 회원')+' 회원은 '+monthLabel(month)+' 회비를 이미 '+dup.date+'에 '+fmt(dup.amount)+'원 납부했습니다.\n\n그래도 저장할까요?')) return;
+  }
+  const m=getMember(memberId);
+  if(payId){
+    const p=S.payments.find(x=>x.id===payId);
+    Object.assign(p,{memberId,name:m?m.name:p.name,date,month,amount,method,memo});
+    toast('납부 내역을 수정했습니다.');
+  }else{
+    S.payments.push({id:nid(),memberId,name:m?m.name:'',date,month,amount,method,memo});
+    toast((m?m.name+' 회원 ':'')+monthLabel(month)+' 회비를 받았습니다.');
+  }
+  save(); closeModal(); render();
+}
+function deletePayment(id){
+  const p=S.payments.find(x=>x.id===id);
+  const m=getMember(p.memberId);
+  if(!confirm('이 납부를 취소(삭제)할까요?\n\n'+(m?m.name:p.name)+' · '+monthLabel(p.month)+' · '+fmt(p.amount)+'원\n\n출납부 잔액이 자동으로 다시 계산됩니다.')) return;
+  S.trash.unshift({tid:nid(),kind:'payment',label:'회비: '+(m?m.name:p.name)+' '+monthLabel(p.month)+' '+fmt(p.amount)+'원',data:p,deletedAt:todayStr()});
+  S.payments=S.payments.filter(x=>x.id!==id);
+  save(); closeModal(); render(); toast('납부를 취소했습니다. (휴지통 보관)');
+}
+
+/* ================= 지출 ================= */
+function openExpForm(id){
+  const x=id? S.expenses.find(e=>e.id===id):null;
+  openModal(`
+    <h3>${x?'지출 수정':'지출 등록'}</h3>
+    <label class="f">지출일 <span class="req">*</span></label>
+    <input type="date" id="fExpDate" value="${x?x.date:todayStr()}">
+    <label class="f">지출 내용 <span class="req">*</span></label>
+    <input type="text" id="fExpDesc" value="${x?esc(x.desc):''}" placeholder="예: 모임 다과비">
+    <label class="f">지출 금액(원) <span class="req">*</span></label>
+    <input type="text" inputmode="numeric" id="fExpAmt" value="${x?fmt(x.amount):''}" oninput="fmtAmtInput(this)">
+    <label class="f">지급 방법</label>
+    <select id="fExpMethod">${['계좌이체','현금','카드'].map(v=>`<option ${x&&x.method===v?'selected':''}>${v}</option>`).join('')}</select>
+    <label class="f">메모</label>
+    <input type="text" id="fExpMemo" value="${x?esc(x.memo||''):''}">
+    <div class="modal-actions">
+      ${x?`<button class="btn btn-red" onclick="deleteExpense(${x.id})">삭제</button>`:''}
+      <button class="btn btn-ghost" onclick="closeModal()">닫기</button>
+      <button class="btn btn-pri" onclick="saveExpense(${x?x.id:'null'})">저장</button>
+    </div>`);
+}
+function saveExpense(id){
+  const date=document.getElementById('fExpDate').value;
+  const desc=document.getElementById('fExpDesc').value.trim();
+  const amount=parseAmt(document.getElementById('fExpAmt').value);
+  const method=document.getElementById('fExpMethod').value;
+  const memo=document.getElementById('fExpMemo').value.trim();
+  if(!date){ alert('지출일을 입력해 주세요.'); return; }
+  if(!desc){ alert('지출 내용을 입력해 주세요.'); return; }
+  if(!amount){ alert('지출 금액을 입력해 주세요.'); return; }
+  if(id){ Object.assign(S.expenses.find(e=>e.id===id),{date,desc,amount,method,memo}); toast('지출을 수정했습니다.'); }
+  else{ S.expenses.push({id:nid(),date,desc,amount,method,memo}); toast('지출을 등록했습니다.'); }
+  save(); closeModal(); render();
+}
+function deleteExpense(id){
+  const x=S.expenses.find(e=>e.id===id);
+  if(!confirm('이 지출을 삭제할까요?\n\n'+x.desc+' · '+x.date+' · '+fmt(x.amount)+'원')) return;
+  S.trash.unshift({tid:nid(),kind:'expense',label:'지출: '+x.desc+' '+fmt(x.amount)+'원',data:x,deletedAt:todayStr()});
+  S.expenses=S.expenses.filter(e=>e.id!==id);
+  save(); closeModal(); render(); toast('삭제했습니다. (휴지통 보관)');
+}
+
+/* ================= 출납부 ================= */
+let ledMode='month', ledFrom='', ledTo='';
+function ledRange(){
+  if(ledMode==='today') return [todayStr(),todayStr()];
+  if(ledMode==='month') return [curMonth()+'-01',curMonth()+'-31'];
+  if(ledMode==='custom') return [ledFrom||'0000-01-01',ledTo||'9999-12-31'];
+  return ['0000-01-01','9999-12-31'];
+}
+function renderLedger(){
+  const all=ledgerAll();
+  const [from,to]=ledRange();
+  const rows=all.filter(r=>r.date>=from&&r.date<=to);
+  const before=all.filter(r=>r.date<from);
+  const carry=before.length? before[before.length-1].bal : S.startBalance;
+  const sumIn=rows.reduce((s,r)=>s+r.inAmt,0);
+  const sumOut=rows.reduce((s,r)=>s+r.outAmt,0);
+  const modes=[['today','오늘'],['month','이번 달'],['all','전체'],['custom','직접 선택']];
+  const title=ledMode==='month'? Number(curMonth().slice(5))+'월' : (ledMode==='today'?'오늘':(ledMode==='all'?'전체':'선택 기간'));
+  document.getElementById('view-ledger').innerHTML=`
+    <div class="chips">${modes.map(([k,l])=>`<button class="chip ${ledMode===k?'on':''}" onclick="ledMode='${k}';renderLedger()">${l}</button>`).join('')}</div>
+    ${ledMode==='custom'?`
+      <div class="card"><div class="row">
+        <input type="date" class="grow" value="${ledFrom}" onchange="ledFrom=this.value;renderLedger()">
+        <span>~</span>
+        <input type="date" class="grow" value="${ledTo}" onchange="ledTo=this.value;renderLedger()">
+      </div></div>`:''}
+    <div class="card">
+      <div class="sum-grid">
+        <div><div class="lbl">${title} 입금 합계</div><div class="val amt-in">${fmt(sumIn)}원</div></div>
+        <div><div class="lbl">${title} 지출 합계</div><div class="val amt-out">${fmt(sumOut)}원</div></div>
+        <div><div class="lbl">현재 잔액</div><div class="val amt-bal">${fmt(currentBalance())}원</div></div>
+      </div>
+    </div>
+    <div class="row" style="margin-bottom:10px">
+      <button class="btn btn-red grow" onclick="openExpForm()">＋ 지출 등록</button>
+      <button class="btn btn-ghost" onclick="downloadCSV()">⬇ CSV</button>
+    </div>
+    <div class="card">
+      <div class="tbl-wrap">
+      <table class="ledger">
+        <thead><tr><th>날짜</th><th>구분</th><th>내용</th><th>입금</th><th>출금</th><th>잔액</th></tr></thead>
+        <tbody>
+          <tr><td class="muted">${ledMode==='all'?'':shortDate(from)}</td><td></td><td class="muted">${ledMode==='all'?'시작 잔액':'이월 잔액'}</td><td></td><td></td><td class="num amt-bal">${fmt(carry)}</td></tr>
+          ${rows.map(r=>`
+            <tr onclick="editLedger('${r.ref.type}',${r.ref.id})" style="cursor:pointer">
+              <td>${ledMode==='all'||ledMode==='custom'? r.date : shortDate(r.date)}</td>
+              <td><span class="lb ${r.kind==='회비'?'lb-fee':'lb-exp'}">${r.kind}</span></td>
+              <td>${esc(r.name)}</td>
+              <td class="num amt-in">${r.inAmt?fmt(r.inAmt):''}</td>
+              <td class="num amt-out">${r.outAmt?fmt(r.outAmt):''}</td>
+              <td class="num amt-bal">${fmt(r.bal)}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+      </div>
+      ${!rows.length?'<div class="empty">이 기간에는 거래 내역이 없습니다.</div>':''}
+      <div class="muted" style="margin-top:8px">※ 줄을 누르면 수정할 수 있습니다. 수정·삭제하면 잔액이 자동으로 다시 계산됩니다.</div>
+    </div>`;
+}
+function editLedger(type,id){ if(type==='payment') openPayForm(id); else openExpForm(id); }
+function downloadCSV(){
+  const all=ledgerAll();
+  const [from,to]=ledRange();
+  const rows=all.filter(r=>r.date>=from&&r.date<=to);
+  let csv='\uFEFF날짜,구분,내용,입금,출금,잔액,메모\n';
+  const cell=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"';
+  rows.forEach(r=>{ csv+=[r.date,r.kind,cell(r.name),r.inAmt||'',r.outAmt||'',r.bal,cell(r.memo)].join(',')+'\n'; });
+  csv+='\n입금 합계,'+rows.reduce((s,r)=>s+r.inAmt,0)+'\n지출 합계,'+rows.reduce((s,r)=>s+r.outAmt,0)+'\n현재 잔액,'+currentBalance()+'\n';
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='회원관리_출납부_'+todayStr()+'.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('CSV 파일을 내려받았습니다.');
+}
+
+/* ================= 설정 ================= */
+function openSettings(){
+  openModal(`
+    <h3>⚙️ 설정</h3>
+    <label class="f">기본 월 회비(원)</label>
+    <div class="row">
+      <input type="text" inputmode="numeric" class="grow" id="fDefFee" value="${fmt(S.defaultFee)}" oninput="fmtAmtInput(this)">
+      <button class="btn btn-pri" onclick="saveDefFee()">저장</button>
+    </div>
+    <div class="muted" style="margin-top:6px">회비 받기 화면에 자동으로 채워지는 금액입니다.</div>
+    <label class="f">시작 잔액(원)</label>
+    <div class="row">
+      <input type="text" inputmode="numeric" class="grow" id="fStartBal" value="${fmt(S.startBalance)}" oninput="fmtAmtInput(this)">
+      <button class="btn btn-pri" onclick="saveStartBal()">저장</button>
+    </div>
+    <h3 style="margin-top:26px">🗑 휴지통 (${S.trash.length}건)</h3>
+    <div id="trashBox" style="margin-top:8px">${trashHTML()}</div>
+    <h3 style="margin-top:26px">📦 데이터</h3>
+    <div class="row" style="flex-wrap:wrap;gap:8px">
+      <button class="btn btn-ghost btn-sm" onclick="downloadCSV()">CSV 내려받기</button>
+      <button class="btn btn-ghost btn-sm" onclick="resetSample()">샘플 데이터로 초기화</button>
+      <button class="btn btn-red btn-sm" onclick="wipeAll()">모든 데이터 지우기</button>
+    </div>
+    <div class="modal-actions"><button class="btn btn-pri" onclick="closeModal()">닫기</button></div>`);
+}
+function trashHTML(){
+  if(!S.trash.length) return '<div class="empty">휴지통이 비어 있습니다.</div>';
+  return S.trash.map((t,i)=>`
+    <div class="t-item">
+      <div class="t-main">
+        <div class="t-title" style="font-size:.95rem">${esc(t.label)}</div>
+        <div class="t-sub">삭제일 ${t.deletedAt}</div>
+      </div>
+      <button class="btn btn-blue btn-sm" onclick="restoreTrash(${i})">복구</button>
+      <button class="btn btn-ghost btn-sm" onclick="purgeTrash(${i})">비우기</button>
+    </div>`).join('');
+}
+function restoreTrash(i){
+  const t=S.trash[i];
+  if(t.kind==='member') S.members.push(t.data);
+  else if(t.kind==='payment') S.payments.push(t.data);
+  else S.expenses.push(t.data);
+  S.trash.splice(i,1); save(); render(); toast('복구했습니다.');
+  const box=document.getElementById('trashBox'); if(box) box.innerHTML=trashHTML();
+}
+function purgeTrash(i){
+  if(!confirm('이 항목을 완전히 삭제할까요? 복구할 수 없습니다.')) return;
+  S.trash.splice(i,1); save();
+  const box=document.getElementById('trashBox'); if(box) box.innerHTML=trashHTML();
+}
+function saveDefFee(){ S.defaultFee=parseAmt(document.getElementById('fDefFee').value); save(); toast('기본 월 회비를 저장했습니다.'); }
+function saveStartBal(){ S.startBalance=parseAmt(document.getElementById('fStartBal').value); save(); render(); toast('시작 잔액을 저장했습니다.'); }
+function resetSample(){
+  if(!confirm('현재 데이터를 모두 지우고 샘플 데이터를 다시 넣을까요?')) return;
+  S=emptyState(); seedSample(); save(); closeModal(); switchTab('home'); toast('샘플 데이터를 넣었습니다.');
+}
+function wipeAll(){
+  if(!confirm('⚠️ 모든 회원·납부·지출 데이터를 지울까요?')) return;
+  if(!confirm('정말로 모두 지울까요? 이 작업은 되돌릴 수 없습니다.')) return;
+  S=emptyState(); save(); closeModal(); switchTab('home'); toast('모든 데이터를 지웠습니다.');
+}
+
+/* ================= 기타 ================= */
+function checkUpdate(){ save(); location.replace(location.pathname+'?u='+new Date().getTime()); }
+function openModal(html){ document.getElementById('modal').innerHTML=html; document.getElementById('overlay').classList.add('show'); }
+function closeModal(){ document.getElementById('overlay').classList.remove('show'); }
+let toastTimer=null;
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.style.display='block';
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{ t.style.display='none'; },2500);
+}
+
+load();
+if(!storageOK) document.getElementById('storageNote').style.display='block';
+render();
+</script>
+</body>
+</html>
